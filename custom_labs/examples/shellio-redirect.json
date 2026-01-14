@@ -1,0 +1,190 @@
+{
+  "version": "1.0",
+  "metadata": {
+    "slug": "shellio-redirect",
+    "name": "Redirect Output to Files and Programs",
+    "description": "Save output or errors to files with shell redirection, and process command output through pipelines",
+    "course": "rh124",
+    "chapter": "Chapter 4",
+    "estimated_time": "20 minutes",
+    "objectives": [
+      "Use redirection to save standard output to files",
+      "Use redirection to save standard error to files",
+      "Use pipelines to send output from one command to another",
+      "Use tee to display output and save to file simultaneously"
+    ],
+    "prerequisites": [
+      "Access to workstation machine",
+      "Log files in /var/opt/my_web directory"
+    ],
+    "tags": ["redirection", "pipes", "stdout", "stderr", "tee"]
+  },
+  "environment": {
+    "hosts": [
+      {
+        "name": "workstation",
+        "description": "Workstation for I/O redirection practice",
+        "ssh_user": "student"
+      }
+    ],
+    "variables": {
+      "HOME_DIR": "/home/student",
+      "LOG_DIR": "/var/opt/my_web"
+    }
+  },
+  "tasks": [
+    {
+      "id": "log-files-exist",
+      "name": "Verify log files exist",
+      "description": "The log files in /var/opt/my_web should exist",
+      "points": 1,
+      "fatal": true,
+      "checks": [
+        {
+          "type": "directory_exists",
+          "host": "workstation",
+          "path": "${LOG_DIR}"
+        },
+        {
+          "type": "file_exists",
+          "host": "workstation",
+          "path": "${LOG_DIR}/20250507.log"
+        }
+      ],
+      "success_message": "Log files exist in /var/opt/my_web",
+      "failure_message": "Log files not found - run 'lab start shellio-redirect' first",
+      "hints": [
+        "Run 'lab start shellio-redirect' to create the log files"
+      ]
+    },
+    {
+      "id": "headers-file",
+      "name": "Verify headers.txt created",
+      "description": "Extract first 2 lines of log files to ~/headers.txt",
+      "points": 2,
+      "checks": [
+        {
+          "type": "file_exists",
+          "host": "workstation",
+          "path": "${HOME_DIR}/headers.txt"
+        },
+        {
+          "type": "file_contains",
+          "host": "workstation",
+          "path": "${HOME_DIR}/headers.txt",
+          "pattern": "my_web.*Loading"
+        },
+        {
+          "type": "file_contains",
+          "host": "workstation",
+          "path": "${HOME_DIR}/headers.txt",
+          "pattern": "Version found"
+        }
+      ],
+      "success_message": "headers.txt contains log file headers",
+      "failure_message": "headers.txt missing or incomplete",
+      "hints": [
+        "Use: head -n 2 /var/opt/my_web/* > headers.txt"
+      ]
+    },
+    {
+      "id": "footers-file",
+      "name": "Verify footers.txt created",
+      "description": "Extract last 5 lines of log files to ~/footers.txt",
+      "points": 2,
+      "checks": [
+        {
+          "type": "file_exists",
+          "host": "workstation",
+          "path": "${HOME_DIR}/footers.txt"
+        },
+        {
+          "type": "file_contains",
+          "host": "workstation",
+          "path": "${HOME_DIR}/footers.txt",
+          "pattern": "status"
+        }
+      ],
+      "success_message": "footers.txt contains log file footers",
+      "failure_message": "footers.txt missing or incomplete",
+      "hints": [
+        "Use: tail -n 5 /var/opt/my_web/* > footers.txt"
+      ]
+    },
+    {
+      "id": "results-file",
+      "name": "Verify results.txt created from find command",
+      "description": "Search /etc for *.conf files and save to ~/results.txt",
+      "points": 2,
+      "checks": [
+        {
+          "type": "file_exists",
+          "host": "workstation",
+          "path": "${HOME_DIR}/results.txt"
+        },
+        {
+          "type": "file_contains",
+          "host": "workstation",
+          "path": "${HOME_DIR}/results.txt",
+          "pattern": "\\.conf$"
+        }
+      ],
+      "success_message": "results.txt contains find command output",
+      "failure_message": "results.txt missing or incomplete",
+      "hints": [
+        "Use: find /etc -name '*.conf' > results.txt 2> search_errors.txt"
+      ]
+    },
+    {
+      "id": "search-errors-file",
+      "name": "Verify search_errors.txt created",
+      "description": "Save find command errors to ~/search_errors.txt",
+      "points": 1,
+      "checks": [
+        {
+          "type": "file_exists",
+          "host": "workstation",
+          "path": "${HOME_DIR}/search_errors.txt"
+        }
+      ],
+      "success_message": "search_errors.txt captures stderr from find",
+      "failure_message": "search_errors.txt not found",
+      "hints": [
+        "Use: find /etc -name '*.conf' > results.txt 2> search_errors.txt",
+        "The 2> redirects standard error to a file"
+      ]
+    },
+    {
+      "id": "findings-file",
+      "name": "Verify findings.txt has complete information",
+      "description": "findings.txt should contain error log info, line counts, and date",
+      "points": 2,
+      "checks": [
+        {
+          "type": "file_exists",
+          "host": "workstation",
+          "path": "${HOME_DIR}/findings.txt"
+        },
+        {
+          "type": "file_contains",
+          "host": "workstation",
+          "path": "${HOME_DIR}/findings.txt",
+          "pattern": "20250507"
+        },
+        {
+          "type": "file_contains",
+          "host": "workstation",
+          "path": "${HOME_DIR}/findings.txt",
+          "pattern": "results.txt"
+        }
+      ],
+      "success_message": "findings.txt contains complete information",
+      "failure_message": "findings.txt missing required content",
+      "hints": [
+        "Create with: echo 'Log file with errors: 20250507.log' > ~/findings.txt",
+        "Append counts: wc -l results.txt | tee -a findings.txt",
+        "Append date: date >> findings.txt"
+      ]
+    }
+  ]
+}

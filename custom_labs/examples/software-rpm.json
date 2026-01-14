@@ -1,0 +1,116 @@
+{
+  "version": "1.0",
+  "metadata": {
+    "slug": "software-rpm",
+    "name": "Investigate an RPM Software Package",
+    "description": "Gather information about a third-party package, extract files for inspection, and install it",
+    "course": "rh124",
+    "chapter": "Chapter 7",
+    "estimated_time": "20 minutes",
+    "objectives": [
+      "Inspect RPM package information with rpm -q -p",
+      "List files in a package with rpm -q -p -l",
+      "View package scripts with rpm -q -p --scripts",
+      "Extract package contents with rpm2cpio and cpio",
+      "Install a local RPM package with rpm -ivh"
+    ],
+    "prerequisites": [
+      "Access to servera machine",
+      "rhcsa-script-1.0.0-1.noarch.rpm in home directory"
+    ],
+    "tags": ["rpm", "package", "install", "cpio", "extract"]
+  },
+  "environment": {
+    "hosts": [
+      {
+        "name": "servera",
+        "description": "Server for RPM package practice",
+        "ssh_user": "student"
+      }
+    ],
+    "variables": {
+      "RPM_FILE": "/home/student/rhcsa-script-1.0.0-1.noarch.rpm",
+      "PKG_NAME": "rhcsa-script"
+    }
+  },
+  "tasks": [
+    {
+      "id": "rpm-file-exists",
+      "name": "Verify RPM file exists in home directory",
+      "description": "The rhcsa-script RPM file should exist",
+      "points": 1,
+      "fatal": true,
+      "checks": [
+        {
+          "type": "file_exists",
+          "host": "servera",
+          "path": "${RPM_FILE}"
+        }
+      ],
+      "success_message": "RPM file exists in home directory",
+      "failure_message": "RPM file not found - run 'lab start software-rpm'",
+      "hints": [
+        "Run 'lab start software-rpm' to copy the RPM file"
+      ]
+    },
+    {
+      "id": "extracted-files",
+      "name": "Verify extracted files exist",
+      "description": "Files extracted from RPM should exist in ~/opt/rhcsa-script/",
+      "points": 2,
+      "checks": [
+        {
+          "type": "directory_exists",
+          "host": "servera",
+          "path": "/home/student/opt/rhcsa-script"
+        },
+        {
+          "type": "file_exists",
+          "host": "servera",
+          "path": "/home/student/opt/rhcsa-script/mymotd"
+        }
+      ],
+      "success_message": "Extracted files exist in ~/opt/rhcsa-script/",
+      "failure_message": "Extracted files not found",
+      "hints": [
+        "Extract with: rpm2cpio rhcsa-script-1.0.0-1.noarch.rpm | cpio -idv"
+      ]
+    },
+    {
+      "id": "package-installed",
+      "name": "Verify rhcsa-script package is installed",
+      "description": "The rhcsa-script package should be installed",
+      "points": 2,
+      "checks": [
+        {
+          "type": "package_installed",
+          "host": "servera",
+          "package": "${PKG_NAME}"
+        }
+      ],
+      "success_message": "rhcsa-script package is installed",
+      "failure_message": "rhcsa-script package is not installed",
+      "hints": [
+        "Install with: sudo rpm -ivh rhcsa-script-1.0.0-1.noarch.rpm"
+      ]
+    },
+    {
+      "id": "mymotd-installed",
+      "name": "Verify /opt/rhcsa-script/mymotd exists",
+      "description": "The mymotd file should be installed by the package",
+      "points": 1,
+      "checks": [
+        {
+          "type": "file_exists",
+          "host": "servera",
+          "path": "/opt/rhcsa-script/mymotd"
+        }
+      ],
+      "success_message": "/opt/rhcsa-script/mymotd installed",
+      "failure_message": "/opt/rhcsa-script/mymotd not found",
+      "hints": [
+        "This file is created when the package is installed"
+      ]
+    }
+  ]
+}

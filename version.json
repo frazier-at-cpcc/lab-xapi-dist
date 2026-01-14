@@ -1,0 +1,12 @@
+{
+  "version": "1.0.1",
+  "release_date": "2026-01-14",
+  "min_python_version": "3.8",
+  "changelog": "https://github.com/frazier-at-cpcc/lab-xapi-dist/blob/main/CHANGELOG.md",
+  "features": [
+    "xAPI grade reporting",
+    "Custom lab definitions",
+    "SCORM package generation",
+    "Auto-update support"
+  ]
+}

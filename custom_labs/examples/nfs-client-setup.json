@@ -1,0 +1,190 @@
+{
+  "version": "1.0",
+  "metadata": {
+    "slug": "custom-nfs-client",
+    "name": "Configure NFS Client with Autofs",
+    "description": "Configure automatic NFS mounting using autofs",
+    "course": "rh134",
+    "chapter": "Chapter 3",
+    "estimated_time": "30 minutes",
+    "objectives": [
+      "Install required NFS client packages",
+      "Configure autofs for automatic mounting",
+      "Set up indirect maps for NFS shares",
+      "Verify NFS mounts work correctly"
+    ],
+    "prerequisites": [
+      "NFS server already configured on serverb",
+      "Network connectivity between hosts"
+    ],
+    "tags": ["nfs", "autofs", "storage", "network"]
+  },
+  "environment": {
+    "hosts": [
+      {
+        "name": "servera",
+        "description": "NFS client",
+        "ssh_user": "student"
+      },
+      {
+        "name": "serverb",
+        "description": "NFS server",
+        "ssh_user": "student"
+      }
+    ],
+    "variables": {
+      "NFS_SERVER": "serverb",
+      "SHARE_PATH": "/shares/data",
+      "MOUNT_POINT": "/mnt/nfs/data"
+    }
+  },
+  "tasks": [
+    {
+      "id": "nfs-server-running",
+      "name": "Verify NFS server is running on serverb",
+      "description": "The NFS server must be active on serverb",
+      "points": 1,
+      "fatal": true,
+      "checks": [
+        {
+          "type": "service_running",
+          "host": "serverb",
+          "service": "nfs-server"
+        }
+      ],
+      "success_message": "NFS server is running",
+      "failure_message": "NFS server is not running on serverb"
+    },
+    {
+      "id": "nfs-utils-installed",
+      "name": "Verify nfs-utils is installed on client",
+      "description": "NFS client utilities must be installed",
+      "points": 1,
+      "checks": [
+        {
+          "type": "package_installed",
+          "host": "servera",
+          "package": "nfs-utils"
+        }
+      ],
+      "success_message": "nfs-utils package is installed",
+      "failure_message": "nfs-utils package is not installed",
+      "hints": [
+        "Install with: sudo dnf install nfs-utils"
+      ]
+    },
+    {
+      "id": "autofs-installed",
+      "name": "Verify autofs is installed",
+      "description": "The autofs package must be installed",
+      "points": 1,
+      "checks": [
+        {
+          "type": "package_installed",
+          "host": "servera",
+          "package": "autofs"
+        }
+      ],
+      "success_message": "autofs package is installed",
+      "failure_message": "autofs package is not installed",
+      "hints": [
+        "Install with: sudo dnf install autofs"
+      ]
+    },
+    {
+      "id": "autofs-running",
+      "name": "Verify autofs service is running",
+      "description": "The autofs service must be running",
+      "points": 1,
+      "checks": [
+        {
+          "type": "service_running",
+          "host": "servera",
+          "service": "autofs"
+        },
+        {
+          "type": "service_enabled",
+          "host": "servera",
+          "service": "autofs"
+        }
+      ],
+      "success_message": "autofs service is running and enabled",
+      "failure_message": "autofs service is not running or not enabled",
+      "hints": [
+        "Start: sudo systemctl start autofs",
+        "Enable: sudo systemctl enable autofs"
+      ]
+    },
+    {
+      "id": "master-map",
+      "name": "Verify auto.master configuration",
+      "description": "Check that auto.master includes the NFS map",
+      "points": 2,
+      "checks": [
+        {
+          "type": "file_exists",
+          "host": "servera",
+          "path": "/etc/auto.master.d/nfs.autofs"
+        },
+        {
+          "type": "file_contains",
+          "host": "servera",
+          "path": "/etc/auto.master.d/nfs.autofs",
+          "pattern": "/mnt/nfs.*auto\\.nfs"
+        }
+      ],
+      "success_message": "auto.master configuration is correct",
+      "failure_message": "auto.master configuration is missing or incorrect",
+      "hints": [
+        "Create /etc/auto.master.d/nfs.autofs with:",
+        "/mnt/nfs  /etc/auto.nfs"
+      ]
+    },
+    {
+      "id": "indirect-map",
+      "name": "Verify indirect map file",
+      "description": "Check that the indirect map for NFS shares exists",
+      "points": 2,
+      "checks": [
+        {
+          "type": "file_exists",
+          "host": "servera",
+          "path": "/etc/auto.nfs"
+        },
+        {
+          "type": "file_contains",
+          "host": "servera",
+          "path": "/etc/auto.nfs",
+          "pattern": "data.*-rw.*serverb:/shares/data"
+        }
+      ],
+      "success_message": "Indirect map file is correct",
+      "failure_message": "Indirect map file is missing or incorrect",
+      "hints": [
+        "Create /etc/auto.nfs with:",
+        "data  -rw,sync  serverb:/shares/data"
+      ]
+    },
+    {
+      "id": "mount-test",
+      "name": "Verify NFS mount works",
+      "description": "Access the mount point to trigger autofs",
+      "points": 2,
+      "checks": [
+        {
+          "type": "command",
+          "host": "servera",
+          "command": "ls /mnt/nfs/data && mount | grep 'serverb:/shares/data'",
+          "expected_exit_code": 0,
+          "timeout": 15
+        }
+      ],
+      "success_message": "NFS mount is working correctly",
+      "failure_message": "NFS mount failed",
+      "hints": [
+        "Check autofs logs: journalctl -u autofs",
+        "Verify NFS export on server: showmount -e serverb"
+      ]
+    }
+  ]
+}

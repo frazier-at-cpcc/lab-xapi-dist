@@ -1,0 +1,206 @@
+{
+  "version": "1.0",
+  "metadata": {
+    "slug": "perms-default",
+    "name": "Manage Default Permissions and Special Permissions",
+    "description": "Control default permissions and configure special permissions like setgid and sticky bit",
+    "course": "rh124",
+    "chapter": "Chapter 6",
+    "estimated_time": "25 minutes",
+    "objectives": [
+      "Create a shared directory with group ownership",
+      "Configure setgid so new files inherit group ownership",
+      "Configure sticky bit to prevent users from deleting others' files",
+      "Understand umask and its effect on file permissions"
+    ],
+    "prerequisites": [
+      "Access to servera machine",
+      "operators group exists",
+      "operator1 and operator2 users exist"
+    ],
+    "tags": ["permissions", "setgid", "sticky", "umask", "special"]
+  },
+  "environment": {
+    "hosts": [
+      {
+        "name": "servera",
+        "description": "Server for special permissions practice",
+        "ssh_user": "student"
+      }
+    ],
+    "variables": {
+      "SHARED_DIR": "/tmp/operators"
+    }
+  },
+  "tasks": [
+    {
+      "id": "operators-group",
+      "name": "Verify operators group exists",
+      "description": "The operators group must exist",
+      "points": 1,
+      "fatal": true,
+      "checks": [
+        {
+          "type": "group_exists",
+          "host": "servera",
+          "group": "operators"
+        }
+      ],
+      "success_message": "operators group exists",
+      "failure_message": "operators group not found - run 'lab start perms-default'",
+      "hints": [
+        "Run 'lab start perms-default' to create prerequisites"
+      ]
+    },
+    {
+      "id": "directory-exists",
+      "name": "Verify /tmp/operators directory exists",
+      "description": "The shared directory must exist",
+      "points": 1,
+      "checks": [
+        {
+          "type": "directory_exists",
+          "host": "servera",
+          "path": "${SHARED_DIR}"
+        }
+      ],
+      "success_message": "/tmp/operators directory exists",
+      "failure_message": "/tmp/operators directory not found",
+      "hints": [
+        "Create directory: mkdir /tmp/operators"
+      ]
+    },
+    {
+      "id": "group-ownership",
+      "name": "Verify group ownership is operators",
+      "description": "The directory group owner must be operators",
+      "points": 1,
+      "checks": [
+        {
+          "type": "file_owner",
+          "host": "servera",
+          "path": "${SHARED_DIR}",
+          "group": "operators"
+        }
+      ],
+      "success_message": "Group ownership is operators",
+      "failure_message": "Group ownership is not operators",
+      "hints": [
+        "Change group: chown :operators /tmp/operators"
+      ]
+    },
+    {
+      "id": "setgid-bit",
+      "name": "Verify setgid bit is set",
+      "description": "The setgid bit should be set so new files inherit group ownership",
+      "points": 2,
+      "checks": [
+        {
+          "type": "command",
+          "host": "servera",
+          "command": "stat -c '%a' /tmp/operators | grep -qE '^[2367]'",
+          "expected_exit_code": 0
+        },
+        {
+          "type": "command",
+          "host": "servera",
+          "command": "ls -ld /tmp/operators | grep -q '^d.....s'",
+          "expected_exit_code": 0
+        }
+      ],
+      "success_message": "Setgid bit is set",
+      "failure_message": "Setgid bit is not set",
+      "hints": [
+        "Set setgid: chmod g+s /tmp/operators"
+      ]
+    },
+    {
+      "id": "sticky-bit",
+      "name": "Verify sticky bit is set",
+      "description": "The sticky bit should prevent users from deleting others' files",
+      "points": 2,
+      "checks": [
+        {
+          "type": "command",
+          "host": "servera",
+          "command": "stat -c '%a' /tmp/operators | grep -qE '^[13][0-7]{3}$'",
+          "expected_exit_code": 0
+        }
+      ],
+      "success_message": "Sticky bit is set",
+      "failure_message": "Sticky bit is not set",
+      "hints": [
+        "Set sticky bit: chmod 3770 /tmp/operators",
+        "Or: chmod +t /tmp/operators"
+      ]
+    },
+    {
+      "id": "permissions-3770",
+      "name": "Verify directory permissions are 3770",
+      "description": "Directory should have drwxrws--T (3770) permissions",
+      "points": 1,
+      "checks": [
+        {
+          "type": "file_mode",
+          "host": "servera",
+          "path": "${SHARED_DIR}",
+          "mode": "3770"
+        }
+      ],
+      "success_message": "Permissions are 3770 (drwxrws--T)",
+      "failure_message": "Permissions are not 3770",
+      "hints": [
+        "Set permissions: chmod 3770 /tmp/operators"
+      ]
+    },
+    {
+      "id": "ops-file1",
+      "name": "Verify ops_file1.txt exists with operators group",
+      "description": "ops_file1.txt should exist and be owned by operators group",
+      "points": 1,
+      "checks": [
+        {
+          "type": "file_exists",
+          "host": "servera",
+          "path": "${SHARED_DIR}/ops_file1.txt"
+        },
+        {
+          "type": "file_owner",
+          "host": "servera",
+          "path": "${SHARED_DIR}/ops_file1.txt",
+          "group": "operators"
+        }
+      ],
+      "success_message": "ops_file1.txt exists with operators group",
+      "failure_message": "ops_file1.txt not found or wrong group",
+      "hints": [
+        "Create file: touch /tmp/operators/ops_file1.txt",
+        "The file should inherit operators group due to setgid"
+      ]
+    },
+    {
+      "id": "ops-file2",
+      "name": "Verify ops_file2.txt exists with operators group",
+      "description": "ops_file2.txt should exist and be owned by operators group",
+      "points": 1,
+      "checks": [
+        {
+          "type": "file_exists",
+          "host": "servera",
+          "path": "${SHARED_DIR}/ops_file2.txt"
+        },
+        {
+          "type": "file_owner",
+          "host": "servera",
+          "path": "${SHARED_DIR}/ops_file2.txt",
+          "group": "operators"
+        }
+      ],
+      "success_message": "ops_file2.txt exists with operators group",
+      "failure_message": "ops_file2.txt not found or wrong group",
+      "hints": [
+        "Create file: touch /tmp/operators/ops_file2.txt"
+      ]
+    }
+  ]
+}

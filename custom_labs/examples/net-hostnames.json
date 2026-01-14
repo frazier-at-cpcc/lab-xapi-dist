@@ -1,0 +1,138 @@
+{
+  "version": "1.0",
+  "metadata": {
+    "slug": "net-hostnames",
+    "name": "Configure Hostnames and Name Resolution",
+    "description": "Configure a server's static hostname and its name resolution settings",
+    "course": "rh124",
+    "chapter": "Chapter 11",
+    "estimated_time": "20 minutes",
+    "objectives": [
+      "Set a customized hostname with hostnamectl",
+      "Configure name resolution using /etc/hosts",
+      "Test hostname resolution with getent and ping"
+    ],
+    "prerequisites": [
+      "Access to servera machine",
+      "Root access via sudo"
+    ],
+    "tags": ["hostname", "hostnamectl", "hosts", "dns", "name-resolution", "network"]
+  },
+  "environment": {
+    "hosts": [
+      {
+        "name": "servera",
+        "description": "Server A for hostname configuration",
+        "ssh_user": "student"
+      }
+    ],
+    "variables": {
+      "STATIC_HOSTNAME": "servera",
+      "CLASSROOM_IP": "172.25.254.254",
+      "CLASSROOM_FQDN": "classroom.example.com",
+      "CLASSROOM_ALIAS": "class"
+    }
+  },
+  "tasks": [
+    {
+      "id": "static-hostname-set",
+      "name": "Verify static hostname is set to servera",
+      "description": "The /etc/hostname file should contain 'servera' as the static hostname",
+      "points": 2,
+      "checks": [
+        {
+          "type": "file_contains",
+          "host": "servera",
+          "path": "/etc/hostname",
+          "content": "servera"
+        }
+      ],
+      "success_message": "Static hostname is set to servera",
+      "failure_message": "Static hostname is not set to servera",
+      "hints": [
+        "Set hostname: hostnamectl hostname servera",
+        "Or: hostnamectl set-hostname servera"
+      ]
+    },
+    {
+      "id": "hostname-active",
+      "name": "Verify current hostname is servera",
+      "description": "The hostname command should return servera",
+      "points": 2,
+      "checks": [
+        {
+          "type": "command",
+          "host": "servera",
+          "command": "hostname | grep -q '^servera$'",
+          "expected_exit_code": 0
+        }
+      ],
+      "success_message": "Current hostname is servera",
+      "failure_message": "Current hostname is not servera",
+      "hints": [
+        "After setting static hostname, log out and back in",
+        "Or reboot to apply the hostname change"
+      ]
+    },
+    {
+      "id": "hosts-file-entry",
+      "name": "Verify /etc/hosts contains class alias",
+      "description": "The /etc/hosts file should map the class alias to 172.25.254.254",
+      "points": 3,
+      "checks": [
+        {
+          "type": "command",
+          "host": "servera",
+          "command": "grep -E '^172\\.25\\.254\\.254.*\\bclass\\b' /etc/hosts",
+          "expected_exit_code": 0
+        }
+      ],
+      "success_message": "/etc/hosts contains class alias for 172.25.254.254",
+      "failure_message": "/etc/hosts does not contain class alias",
+      "hints": [
+        "Add line to /etc/hosts: 172.25.254.254 classroom.example.com classroom class",
+        "Ensure 'class' appears as an alias on the classroom line"
+      ]
+    },
+    {
+      "id": "class-resolves",
+      "name": "Verify class hostname resolves",
+      "description": "The getent hosts command should resolve the class alias",
+      "points": 2,
+      "checks": [
+        {
+          "type": "command",
+          "host": "servera",
+          "command": "getent hosts class | grep -q '172.25.254.254'",
+          "expected_exit_code": 0
+        }
+      ],
+      "success_message": "class hostname resolves to 172.25.254.254",
+      "failure_message": "class hostname does not resolve correctly",
+      "hints": [
+        "Test resolution: getent hosts class",
+        "Check /etc/hosts file entry"
+      ]
+    },
+    {
+      "id": "class-ping",
+      "name": "Verify connectivity to class hostname",
+      "description": "Should be able to ping the class hostname",
+      "points": 2,
+      "checks": [
+        {
+          "type": "command",
+          "host": "servera",
+          "command": "ping -c1 -W2 class >/dev/null 2>&1",
+          "expected_exit_code": 0
+        }
+      ],
+      "success_message": "Can ping class hostname successfully",
+      "failure_message": "Cannot ping class hostname",
+      "hints": [
+        "Ensure /etc/hosts has the class alias",
+        "Ensure network connectivity to 172.25.254.254"
+      ]
+    }
+  ]
+}
