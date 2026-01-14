@@ -1,0 +1,103 @@
+{
+  "version": "1.0",
+  "metadata": {
+    "slug": "edit-file",
+    "name": "Edit Text Files from the Command Line",
+    "description": "Create, view, and edit text files by using the Vim editor",
+    "course": "rh124",
+    "chapter": "Chapter 3",
+    "estimated_time": "30 minutes",
+    "objectives": [
+      "Gain competency in Vim by using the vimtutor command",
+      "Navigate with h, j, k, l keys",
+      "Delete text with x key",
+      "Enter insert mode with i key",
+      "Save and quit with :wq"
+    ],
+    "prerequisites": [
+      "Access to servera machine",
+      "Basic terminal usage"
+    ],
+    "tags": ["vim", "vi", "editor", "vimtutor", "text"]
+  },
+  "environment": {
+    "hosts": [
+      {
+        "name": "servera",
+        "description": "Server for Vim practice",
+        "ssh_user": "student"
+      }
+    ],
+    "variables": {
+      "HOME_DIR": "/home/student"
+    }
+  },
+  "tasks": [
+    {
+      "id": "vim-installed",
+      "name": "Verify Vim is installed",
+      "description": "The vim-enhanced package must be installed",
+      "points": 1,
+      "fatal": true,
+      "checks": [
+        {
+          "type": "command",
+          "host": "servera",
+          "command": "which vim",
+          "expected_exit_code": 0
+        }
+      ],
+      "success_message": "Vim is installed and available",
+      "failure_message": "Vim is not installed",
+      "hints": [
+        "Install with: sudo dnf install vim-enhanced"
+      ]
+    },
+    {
+      "id": "vimtutor-available",
+      "name": "Verify vimtutor command is available",
+      "description": "The vimtutor command should be available",
+      "points": 1,
+      "checks": [
+        {
+          "type": "command",
+          "host": "servera",
+          "command": "which vimtutor",
+          "expected_exit_code": 0
+        }
+      ],
+      "success_message": "vimtutor command is available",
+      "failure_message": "vimtutor command not found",
+      "hints": [
+        "vimtutor is included with vim-enhanced package"
+      ]
+    },
+    {
+      "id": "vim-practice-file",
+      "name": "Verify practice file created with Vim",
+      "description": "Create a practice file using Vim to demonstrate editor usage",
+      "points": 2,
+      "checks": [
+        {
+          "type": "file_exists",
+          "host": "servera",
+          "path": "${HOME_DIR}/vim-practice.txt"
+        },
+        {
+          "type": "file_contains",
+          "host": "servera",
+          "path": "${HOME_DIR}/vim-practice.txt",
+          "pattern": "."
+        }
+      ],
+      "success_message": "Practice file created with Vim",
+      "failure_message": "Practice file not found",
+      "hints": [
+        "Open vim: vim ~/vim-practice.txt",
+        "Press i to enter insert mode",
+        "Type some text",
+        "Press Esc, then type :wq to save and quit"
+      ]
+    }
+  ]
+}

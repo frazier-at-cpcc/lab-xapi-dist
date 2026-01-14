@@ -1,0 +1,189 @@
+{
+  "version": "1.0",
+  "metadata": {
+    "slug": "fs-locate",
+    "name": "Locate Files on a File System",
+    "description": "Search for files on a file system that is currently mounted",
+    "course": "rh124",
+    "chapter": "Chapter 8",
+    "estimated_time": "15 minutes",
+    "objectives": [
+      "Update the locate database with updatedb",
+      "Search for files using the locate command",
+      "Search for files using the find command with various criteria"
+    ],
+    "prerequisites": [
+      "Access to servera machine",
+      "Root access via sudo"
+    ],
+    "tags": ["find", "locate", "search", "files", "filesystem", "updatedb"]
+  },
+  "environment": {
+    "hosts": [
+      {
+        "name": "servera",
+        "description": "Server for file search practice",
+        "ssh_user": "student"
+      }
+    ],
+    "variables": {}
+  },
+  "tasks": [
+    {
+      "id": "locate-installed",
+      "name": "Verify locate/mlocate package is installed",
+      "description": "The locate command must be available",
+      "points": 1,
+      "fatal": true,
+      "checks": [
+        {
+          "type": "command",
+          "host": "servera",
+          "command": "which locate || which mlocate || which plocate",
+          "expected_exit_code": 0
+        }
+      ],
+      "success_message": "locate command is available",
+      "failure_message": "locate command not found - install mlocate or plocate",
+      "hints": [
+        "Install with: sudo dnf install mlocate"
+      ]
+    },
+    {
+      "id": "locatedb-updated",
+      "name": "Verify locate database was updated",
+      "description": "The locate database should have been updated recently with updatedb",
+      "points": 2,
+      "checks": [
+        {
+          "type": "command",
+          "host": "servera",
+          "command": "test -f /var/lib/mlocate/mlocate.db -o -f /var/lib/plocate/plocate.db -o -f /var/lib/locate/locatedb && find /var/lib/mlocate /var/lib/plocate /var/lib/locate -name '*.db' -mmin -60 2>/dev/null | grep -q .",
+          "expected_exit_code": 0
+        }
+      ],
+      "success_message": "locate database was updated recently",
+      "failure_message": "locate database not found or not recently updated",
+      "hints": [
+        "Update database: sudo updatedb"
+      ]
+    },
+    {
+      "id": "locate-logrotate",
+      "name": "Verify locate finds logrotate.conf",
+      "description": "The locate command should find logrotate.conf",
+      "points": 1,
+      "checks": [
+        {
+          "type": "command",
+          "host": "servera",
+          "command": "locate logrotate.conf | grep -q logrotate.conf",
+          "expected_exit_code": 0
+        }
+      ],
+      "success_message": "locate successfully finds logrotate.conf",
+      "failure_message": "locate cannot find logrotate.conf",
+      "hints": [
+        "Run: locate logrotate.conf",
+        "If not found, update database: sudo updatedb"
+      ]
+    },
+    {
+      "id": "locate-networkmanager",
+      "name": "Verify locate finds NetworkManager.conf (case-insensitive)",
+      "description": "The locate -i command should find NetworkManager.conf",
+      "points": 1,
+      "checks": [
+        {
+          "type": "command",
+          "host": "servera",
+          "command": "locate -i networkmanager.conf | grep -qi networkmanager.conf",
+          "expected_exit_code": 0
+        }
+      ],
+      "success_message": "locate -i successfully finds NetworkManager.conf",
+      "failure_message": "locate -i cannot find NetworkManager.conf",
+      "hints": [
+        "Run: locate -i networkmanager.conf",
+        "The -i flag enables case-insensitive search"
+      ]
+    },
+    {
+      "id": "find-chrony-files",
+      "name": "Verify find locates chrony-owned files",
+      "description": "The find command should locate files owned by chrony in /var/lib",
+      "points": 1,
+      "checks": [
+        {
+          "type": "command",
+          "host": "servera",
+          "command": "sudo find /var/lib -user chrony 2>/dev/null | grep -q chrony",
+          "expected_exit_code": 0
+        }
+      ],
+      "success_message": "find successfully locates chrony-owned files",
+      "failure_message": "find cannot locate chrony-owned files in /var/lib",
+      "hints": [
+        "Run: sudo find /var/lib -user chrony"
+      ]
+    },
+    {
+      "id": "find-root-mail-files",
+      "name": "Verify find locates root:mail owned files",
+      "description": "The find command should locate files owned by root user and mail group",
+      "points": 1,
+      "checks": [
+        {
+          "type": "command",
+          "host": "servera",
+          "command": "sudo find /var -user root -group mail 2>/dev/null | grep -q .",
+          "expected_exit_code": 0
+        }
+      ],
+      "success_message": "find successfully locates root:mail owned files",
+      "failure_message": "find cannot locate files owned by root:mail in /var",
+      "hints": [
+        "Run: sudo find /var -user root -group mail"
+      ]
+    },
+    {
+      "id": "find-large-files",
+      "name": "Verify find locates files by size",
+      "description": "The find command should locate files larger than 50KB in /usr/bin",
+      "points": 1,
+      "checks": [
+        {
+          "type": "command",
+          "host": "servera",
+          "command": "find /usr/bin -size +50k 2>/dev/null | grep -q .",
+          "expected_exit_code": 0
+        }
+      ],
+      "success_message": "find successfully locates files larger than 50KB",
+      "failure_message": "find cannot locate files larger than 50KB in /usr/bin",
+      "hints": [
+        "Run: find /usr/bin -size +50k"
+      ]
+    },
+    {
+      "id": "find-block-devices",
+      "name": "Verify find locates block device files",
+      "description": "The find command should locate block device files in /dev",
+      "points": 1,
+      "checks": [
+        {
+          "type": "command",
+          "host": "servera",
+          "command": "find /dev -type b 2>/dev/null | grep -q .",
+          "expected_exit_code": 0
+        }
+      ],
+      "success_message": "find successfully locates block device files",
+      "failure_message": "find cannot locate block device files in /dev",
+      "hints": [
+        "Run: find /dev -type b",
+        "The -type b flag finds block special files"
+      ]
+    }
+  ]
+}

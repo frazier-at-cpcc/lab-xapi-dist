@@ -1,0 +1,152 @@
+{
+  "version": "1.0",
+  "metadata": {
+    "slug": "software-dnf",
+    "name": "Install and Update Packages with DNF",
+    "description": "Find, install, and update software packages with DNF",
+    "course": "rh124",
+    "chapter": "Chapter 7",
+    "estimated_time": "20 minutes",
+    "objectives": [
+      "Search for packages with dnf search",
+      "Install and remove packages with dnf install/remove",
+      "Install and remove component groups with dnf group",
+      "View transaction history with dnf history"
+    ],
+    "prerequisites": [
+      "Access to servera machine",
+      "Root access via sudo"
+    ],
+    "tags": ["dnf", "yum", "package", "install", "remove", "group"]
+  },
+  "environment": {
+    "hosts": [
+      {
+        "name": "servera",
+        "description": "Server for DNF package management practice",
+        "ssh_user": "student"
+      }
+    ],
+    "variables": {
+      "PACKAGE": "nmap",
+      "GROUP": "Security Tools"
+    }
+  },
+  "tasks": [
+    {
+      "id": "nmap-installed-history",
+      "name": "Verify nmap was installed (dnf history)",
+      "description": "DNF history should show nmap was installed at some point",
+      "points": 2,
+      "checks": [
+        {
+          "type": "command",
+          "host": "servera",
+          "command": "sudo dnf history | grep -i 'install.*nmap\\|install nmap'",
+          "expected_exit_code": 0
+        }
+      ],
+      "success_message": "DNF history shows nmap installation",
+      "failure_message": "No nmap installation found in dnf history",
+      "hints": [
+        "Install nmap: sudo dnf install nmap",
+        "View history: dnf history"
+      ]
+    },
+    {
+      "id": "nmap-removed-history",
+      "name": "Verify nmap was removed (dnf history)",
+      "description": "DNF history should show nmap was removed",
+      "points": 2,
+      "checks": [
+        {
+          "type": "command",
+          "host": "servera",
+          "command": "sudo dnf history | grep -i 'remove.*nmap\\|removed.*nmap'",
+          "expected_exit_code": 0
+        }
+      ],
+      "success_message": "DNF history shows nmap removal",
+      "failure_message": "No nmap removal found in dnf history",
+      "hints": [
+        "Remove nmap: sudo dnf remove nmap"
+      ]
+    },
+    {
+      "id": "nmap-not-installed",
+      "name": "Verify nmap is not currently installed",
+      "description": "The nmap package should be removed (final state)",
+      "points": 1,
+      "checks": [
+        {
+          "type": "command",
+          "host": "servera",
+          "command": "! rpm -q nmap",
+          "expected_exit_code": 0
+        }
+      ],
+      "success_message": "nmap package is not installed (correct final state)",
+      "failure_message": "nmap package is still installed - should be removed",
+      "hints": [
+        "Remove nmap: sudo dnf remove nmap"
+      ]
+    },
+    {
+      "id": "security-tools-installed-history",
+      "name": "Verify Security Tools group was installed",
+      "description": "DNF history should show Security Tools group was installed",
+      "points": 2,
+      "checks": [
+        {
+          "type": "command",
+          "host": "servera",
+          "command": "sudo dnf history | grep -i 'group install.*security\\|install.*security'",
+          "expected_exit_code": 0
+        }
+      ],
+      "success_message": "DNF history shows Security Tools group installation",
+      "failure_message": "No Security Tools group installation found in dnf history",
+      "hints": [
+        "Install group: sudo dnf group install 'Security Tools'"
+      ]
+    },
+    {
+      "id": "security-tools-removed-history",
+      "name": "Verify Security Tools group was removed",
+      "description": "DNF history should show Security Tools group was removed",
+      "points": 2,
+      "checks": [
+        {
+          "type": "command",
+          "host": "servera",
+          "command": "sudo dnf history | grep -i 'group remove.*security\\|remove.*security'",
+          "expected_exit_code": 0
+        }
+      ],
+      "success_message": "DNF history shows Security Tools group removal",
+      "failure_message": "No Security Tools group removal found in dnf history",
+      "hints": [
+        "Remove group: sudo dnf group remove 'Security Tools'"
+      ]
+    },
+    {
+      "id": "security-tools-not-installed",
+      "name": "Verify Security Tools group is not installed",
+      "description": "The Security Tools group should be removed (final state)",
+      "points": 1,
+      "checks": [
+        {
+          "type": "command",
+          "host": "servera",
+          "command": "! sudo dnf group list --installed 2>/dev/null | grep -i 'security tools'",
+          "expected_exit_code": 0
+        }
+      ],
+      "success_message": "Security Tools group is not installed (correct final state)",
+      "failure_message": "Security Tools group is still installed - should be removed",
+      "hints": [
+        "Remove group: sudo dnf group remove 'Security Tools'"
+      ]
+    }
+  ]
+}

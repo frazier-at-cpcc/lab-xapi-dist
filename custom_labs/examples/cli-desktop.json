@@ -1,0 +1,67 @@
+{
+  "version": "1.0",
+  "metadata": {
+    "slug": "cli-desktop",
+    "name": "Access the Command Line with the Desktop Environment",
+    "description": "Log in to a Linux system with the GNOME desktop environment and run commands from a shell prompt in a terminal program",
+    "course": "rh124",
+    "chapter": "Chapter 2",
+    "estimated_time": "15 minutes",
+    "objectives": [
+      "Log in to a Linux system using the GNOME desktop environment",
+      "Change a user password using the passwd command",
+      "Verify password changes by logging out and back in",
+      "Lock and unlock the screen",
+      "Navigate the GNOME system menu and power options"
+    ],
+    "prerequisites": [
+      "Access to workstation machine",
+      "Knowledge of student user credentials"
+    ],
+    "tags": ["gnome", "desktop", "passwd", "login", "terminal"]
+  },
+  "environment": {
+    "hosts": [
+      {
+        "name": "workstation",
+        "description": "Student workstation with GNOME desktop",
+        "ssh_user": "student"
+      }
+    ],
+    "variables": {
+      "TARGET_USER": "student",
+      "NEW_PASSWORD": "redhat!23"
+    }
+  },
+  "tasks": [
+    {
+      "id": "password-changed",
+      "name": "Verify password changed to redhat!23",
+      "description": "The student user password must be changed from 'student' to 'redhat!23' using the passwd command",
+      "points": 1,
+      "fatal": false,
+      "checks": [
+        {
+          "type": "script",
+          "host": "workstation",
+          "user": "root",
+          "script": "python3 -c \"\nimport warnings\nwarnings.filterwarnings(\\\"ignore\\\", category=DeprecationWarning)\nimport crypt\nimport subprocess\n\n# Get the password hash from /etc/shadow (running as root, no sudo needed)\nresult = subprocess.run([\\\"getent\\\", \\\"shadow\\\", \\\"student\\\"], capture_output=True, text=True)\nif result.returncode != 0:\n    exit(1)\n\nline = result.stdout.strip()\nif not line:\n    exit(1)\n\n# Parse the hash (second field)\nfields = line.split(\\\":\\\")\nif len(fields) < 2:\n    exit(1)\n\nstored_hash = fields[1]\n\n# Verify the password\nif crypt.crypt(\\\"redhat!23\\\", stored_hash) == stored_hash:\n    print(\\\"Password verified: redhat!23\\\")\n    exit(0)\nelse:\n    print(\\\"Password does not match redhat!23\\\")\n    exit(1)\n\"",
+          "timeout": 30
+        }
+      ],
+      "success_message": "Password successfully changed to 'redhat!23'",
+      "failure_message": "Password has not been changed to 'redhat!23'",
+      "hints": [
+        "Open a terminal using the Activities menu or by pressing Super key twice",
+        "Run the 'passwd' command",
+        "Enter your current password: student",
+        "Enter the new password: redhat!23",
+        "Confirm the new password: redhat!23"
+      ]
+    }
+  ],
+  "cleanup": {
+    "enabled": false,
+    "commands": []
+  }
+}

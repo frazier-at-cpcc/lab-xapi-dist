@@ -1,0 +1,176 @@
+{
+  "version": "1.0",
+  "metadata": {
+    "slug": "files-manage",
+    "name": "Manage Files with Command-line Tools",
+    "description": "Create, copy, move, and remove files and directories",
+    "course": "rh124",
+    "chapter": "Chapter 3",
+    "estimated_time": "20 minutes",
+    "objectives": [
+      "Create directories using mkdir",
+      "Create empty files using touch",
+      "Move files using mv",
+      "Copy files and directories using cp",
+      "Remove files and directories using rm"
+    ],
+    "prerequisites": [
+      "Access to servera machine",
+      "Basic command line navigation"
+    ],
+    "tags": ["files", "directories", "mkdir", "touch", "mv", "cp", "rm"]
+  },
+  "environment": {
+    "hosts": [
+      {
+        "name": "servera",
+        "description": "Server for file management practice",
+        "ssh_user": "student"
+      }
+    ],
+    "variables": {
+      "HOME_DIR": "/home/student"
+    }
+  },
+  "tasks": [
+    {
+      "id": "music-directory",
+      "name": "Verify Music directory exists with song files",
+      "description": "Music directory should contain song1.mp3 through song6.mp3",
+      "points": 2,
+      "checks": [
+        {
+          "type": "directory_exists",
+          "host": "servera",
+          "path": "${HOME_DIR}/Music"
+        },
+        {
+          "type": "file_exists",
+          "host": "servera",
+          "path": "${HOME_DIR}/Music/song1.mp3"
+        },
+        {
+          "type": "file_exists",
+          "host": "servera",
+          "path": "${HOME_DIR}/Music/song6.mp3"
+        },
+        {
+          "type": "command",
+          "host": "servera",
+          "command": "ls ${HOME_DIR}/Music/*.mp3 | wc -l | grep -q '^6$'",
+          "expected_exit_code": 0
+        }
+      ],
+      "success_message": "Music directory contains all 6 song files",
+      "failure_message": "Music directory missing or incomplete",
+      "hints": [
+        "Create directory: mkdir ~/Music",
+        "Create files: touch song1.mp3 song2.mp3 ... song6.mp3",
+        "Move files: mv song*.mp3 Music/"
+      ]
+    },
+    {
+      "id": "pictures-directory",
+      "name": "Verify Pictures directory exists with snap files",
+      "description": "Pictures directory should contain snap1.jpg through snap6.jpg",
+      "points": 2,
+      "checks": [
+        {
+          "type": "directory_exists",
+          "host": "servera",
+          "path": "${HOME_DIR}/Pictures"
+        },
+        {
+          "type": "file_exists",
+          "host": "servera",
+          "path": "${HOME_DIR}/Pictures/snap1.jpg"
+        },
+        {
+          "type": "file_exists",
+          "host": "servera",
+          "path": "${HOME_DIR}/Pictures/snap6.jpg"
+        },
+        {
+          "type": "command",
+          "host": "servera",
+          "command": "ls ${HOME_DIR}/Pictures/*.jpg | wc -l | grep -q '^6$'",
+          "expected_exit_code": 0
+        }
+      ],
+      "success_message": "Pictures directory contains all 6 snap files",
+      "failure_message": "Pictures directory missing or incomplete",
+      "hints": [
+        "Create directory: mkdir ~/Pictures",
+        "Create files: touch snap1.jpg snap2.jpg ... snap6.jpg",
+        "Move files: mv snap*.jpg Pictures/"
+      ]
+    },
+    {
+      "id": "videos-directory",
+      "name": "Verify Videos directory exists with film files",
+      "description": "Videos directory should contain film1.avi through film6.avi",
+      "points": 2,
+      "checks": [
+        {
+          "type": "directory_exists",
+          "host": "servera",
+          "path": "${HOME_DIR}/Videos"
+        },
+        {
+          "type": "file_exists",
+          "host": "servera",
+          "path": "${HOME_DIR}/Videos/film1.avi"
+        },
+        {
+          "type": "file_exists",
+          "host": "servera",
+          "path": "${HOME_DIR}/Videos/film6.avi"
+        },
+        {
+          "type": "command",
+          "host": "servera",
+          "command": "ls ${HOME_DIR}/Videos/*.avi | wc -l | grep -q '^6$'",
+          "expected_exit_code": 0
+        }
+      ],
+      "success_message": "Videos directory contains all 6 film files",
+      "failure_message": "Videos directory missing or incomplete",
+      "hints": [
+        "Create directory: mkdir ~/Videos",
+        "Create files: touch film1.avi film2.avi ... film6.avi",
+        "Move files: mv film*.avi Videos/"
+      ]
+    },
+    {
+      "id": "cleanup-complete",
+      "name": "Verify cleanup completed (family, friends, work removed)",
+      "description": "The family, friends, and work directories should be removed",
+      "points": 1,
+      "checks": [
+        {
+          "type": "command",
+          "host": "servera",
+          "command": "test ! -d ${HOME_DIR}/family",
+          "expected_exit_code": 0
+        },
+        {
+          "type": "command",
+          "host": "servera",
+          "command": "test ! -d ${HOME_DIR}/friends",
+          "expected_exit_code": 0
+        },
+        {
+          "type": "command",
+          "host": "servera",
+          "command": "test ! -d ${HOME_DIR}/work",
+          "expected_exit_code": 0
+        }
+      ],
+      "success_message": "Cleanup complete - temporary directories removed",
+      "failure_message": "Temporary directories still exist",
+      "hints": [
+        "Remove directories: rm -rf ~/family ~/friends ~/work"
+      ]
+    }
+  ]
+}

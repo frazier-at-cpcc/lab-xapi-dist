@@ -1,0 +1,104 @@
+{
+  "version": "1.0",
+  "metadata": {
+    "slug": "lightspeed-assistant",
+    "name": "Getting AI-assisted Help with Red Hat Enterprise Linux Lightspeed",
+    "description": "Install and use the command-line assistant to troubleshoot system issues",
+    "course": "rh124",
+    "chapter": "Chapter 2",
+    "estimated_time": "25 minutes",
+    "objectives": [
+      "Install the command-line assistant",
+      "Ask for a recommendation",
+      "Ask for an explanation",
+      "Troubleshoot and resolve an issue"
+    ],
+    "prerequisites": [
+      "Access to servera machine",
+      "Basic command line skills"
+    ],
+    "tags": ["lightspeed", "ai", "assistant", "troubleshooting", "httpd"]
+  },
+  "environment": {
+    "hosts": [
+      {
+        "name": "servera",
+        "description": "Server with command-line assistant",
+        "ssh_user": "student"
+      }
+    ],
+    "variables": {
+      "HTTPD_CONF": "/etc/httpd/conf/httpd.conf"
+    }
+  },
+  "tasks": [
+    {
+      "id": "cli-assistant-installed",
+      "name": "Verify command-line-assistant is installed",
+      "description": "The command-line-assistant package must be installed on servera",
+      "points": 1,
+      "checks": [
+        {
+          "type": "package_installed",
+          "host": "servera",
+          "package": "command-line-assistant"
+        }
+      ],
+      "success_message": "command-line-assistant package is installed",
+      "failure_message": "command-line-assistant package is not installed",
+      "hints": [
+        "Use 'sudo dnf install command-line-assistant' to install the package"
+      ]
+    },
+    {
+      "id": "httpd-config-fixed",
+      "name": "Verify httpd.conf syntax error is fixed",
+      "description": "Line 47 of /etc/httpd/conf/httpd.conf should have 'Listen' (not 'Lissten')",
+      "points": 2,
+      "checks": [
+        {
+          "type": "file_exists",
+          "host": "servera",
+          "path": "${HTTPD_CONF}"
+        },
+        {
+          "type": "command",
+          "host": "servera",
+          "command": "sed -n '47p' /etc/httpd/conf/httpd.conf | grep -q '^Listen'",
+          "expected_exit_code": 0
+        },
+        {
+          "type": "file_not_contains",
+          "host": "servera",
+          "path": "${HTTPD_CONF}",
+          "pattern": "Lissten"
+        }
+      ],
+      "success_message": "httpd.conf syntax error has been fixed",
+      "failure_message": "httpd.conf still contains the syntax error (Lissten)",
+      "hints": [
+        "The error is on line 47: 'Lissten' should be 'Listen'",
+        "Use: sudo sed -i '47s/Lissten/Listen/' /etc/httpd/conf/httpd.conf"
+      ]
+    },
+    {
+      "id": "httpd-running",
+      "name": "Verify httpd service is running",
+      "description": "The httpd service must be started after fixing the configuration",
+      "points": 1,
+      "checks": [
+        {
+          "type": "service_running",
+          "host": "servera",
+          "service": "httpd"
+        }
+      ],
+      "success_message": "httpd service is running",
+      "failure_message": "httpd service is not running",
+      "hints": [
+        "After fixing the config, restart httpd: sudo systemctl restart httpd",
+        "Check status with: sudo systemctl status httpd"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,244 @@
+{
+  "generated": "2026-01-14",
+  "count": 34,
+  "labs": [
+    {
+      "file": "cli-desktop.json",
+      "slug": "cli-desktop",
+      "name": "Access the Command Line with the Desktop Environment",
+      "course": "rh124",
+      "tasks": 1
+    },
+    {
+      "file": "edit-file.json",
+      "slug": "edit-file",
+      "name": "Edit Text Files from the Command Line",
+      "course": "rh124",
+      "tasks": 3
+    },
+    {
+      "file": "files-make.json",
+      "slug": "files-make",
+      "name": "Create Links Between Files",
+      "course": "rh124",
+      "tasks": 4
+    },
+    {
+      "file": "files-manage.json",
+      "slug": "files-manage",
+      "name": "Manage Files with Command-line Tools",
+      "course": "rh124",
+      "tasks": 4
+    },
+    {
+      "file": "flatpak-application.json",
+      "slug": "flatpak-application",
+      "name": "Manage Applications from Flatpak",
+      "course": "rh124",
+      "tasks": 6
+    },
+    {
+      "file": "flatpak-configure.json",
+      "slug": "flatpak-configure",
+      "name": "Configure Flatpak for Application Installation",
+      "course": "rh124",
+      "tasks": 6
+    },
+    {
+      "file": "fs-locate.json",
+      "slug": "fs-locate",
+      "name": "Locate Files on a File System",
+      "course": "rh124",
+      "tasks": 8
+    },
+    {
+      "file": "fs-mount.json",
+      "slug": "fs-mount",
+      "name": "Mount and Unmount a File System",
+      "course": "rh124",
+      "tasks": 5
+    },
+    {
+      "file": "help-manual.json",
+      "slug": "help-manual",
+      "name": "Get Help from Manual Pages",
+      "course": "rh124",
+      "tasks": 4
+    },
+    {
+      "file": "lightspeed-assistant.json",
+      "slug": "lightspeed-assistant",
+      "name": "Getting AI-assisted Help with Red Hat Enterprise Linux Lightspeed",
+      "course": "rh124",
+      "tasks": 3
+    },
+    {
+      "file": "net-configure.json",
+      "slug": "net-configure",
+      "name": "Configure Networking from the Command Line",
+      "course": "rh124",
+      "tasks": 7
+    },
+    {
+      "file": "net-edit.json",
+      "slug": "net-edit",
+      "name": "Edit Network Configuration Files",
+      "course": "rh124",
+      "tasks": 7
+    },
+    {
+      "file": "net-hostnames.json",
+      "slug": "net-hostnames",
+      "name": "Configure Hostnames and Name Resolution",
+      "course": "rh124",
+      "tasks": 5
+    },
+    {
+      "file": "netbasics-validate.json",
+      "slug": "netbasics-validate",
+      "name": "Validate Network Configuration",
+      "course": "rh124",
+      "tasks": 6
+    },
+    {
+      "file": "nfs-client-setup.json",
+      "slug": "custom-nfs-client",
+      "name": "Configure NFS Client with Autofs",
+      "course": "rh134",
+      "tasks": 7
+    },
+    {
+      "file": "perms-cli.json",
+      "slug": "perms-cli",
+      "name": "Manage File Permissions from the Command Line",
+      "course": "rh124",
+      "tasks": 6
+    },
+    {
+      "file": "perms-default.json",
+      "slug": "perms-default",
+      "name": "Manage Default Permissions and Special Permissions",
+      "course": "rh124",
+      "tasks": 8
+    },
+    {
+      "file": "processes-control.json",
+      "slug": "processes-control",
+      "name": "Control Jobs and Processes",
+      "course": "rh124",
+      "tasks": 1
+    },
+    {
+      "file": "processes-kill.json",
+      "slug": "processes-kill",
+      "name": "Send Signals to Processes",
+      "course": "rh124",
+      "tasks": 5
+    },
+    {
+      "file": "processes-monitor.json",
+      "slug": "processes-monitor",
+      "name": "Monitor Process Activity",
+      "course": "rh124",
+      "tasks": 5
+    },
+    {
+      "file": "services-control.json",
+      "slug": "services-control",
+      "name": "Control System Services",
+      "course": "rh124",
+      "tasks": 4
+    },
+    {
+      "file": "services-identify.json",
+      "slug": "services-identify",
+      "name": "Identify System Processes that Start Automatically",
+      "course": "rh124",
+      "tasks": 6
+    },
+    {
+      "file": "shellio-redirect.json",
+      "slug": "shellio-redirect",
+      "name": "Redirect Output to Files and Programs",
+      "course": "rh124",
+      "tasks": 6
+    },
+    {
+      "file": "software-dnf.json",
+      "slug": "software-dnf",
+      "name": "Install and Update Packages with DNF",
+      "course": "rh124",
+      "tasks": 6
+    },
+    {
+      "file": "software-repo.json",
+      "slug": "software-repo",
+      "name": "Enable a DNF Software Repository",
+      "course": "rh124",
+      "tasks": 9
+    },
+    {
+      "file": "software-rpm.json",
+      "slug": "software-rpm",
+      "name": "Investigate an RPM Software Package",
+      "course": "rh124",
+      "tasks": 4
+    },
+    {
+      "file": "ssh-hostkeys.json",
+      "slug": "ssh-hostkeys",
+      "name": "Manage SSH Host Keys",
+      "course": "rh124",
+      "tasks": 5
+    },
+    {
+      "file": "ssh-keyauth.json",
+      "slug": "ssh-keyauth",
+      "name": "Configure SSH Key-based Authentication",
+      "course": "rh124",
+      "tasks": 5
+    },
+    {
+      "file": "user-management.json",
+      "slug": "user-management",
+      "name": "Linux User and Group Management",
+      "course": "rh124",
+      "tasks": 7
+    },
+    {
+      "file": "users-group.json",
+      "slug": "users-group",
+      "name": "Manage Local Group Accounts",
+      "course": "rh124",
+      "tasks": 5
+    },
+    {
+      "file": "users-password.json",
+      "slug": "users-password",
+      "name": "Manage User Passwords",
+      "course": "rh124",
+      "tasks": 4
+    },
+    {
+      "file": "users-superuser.json",
+      "slug": "users-superuser",
+      "name": "Gain Superuser Access",
+      "course": "rh124",
+      "tasks": 5
+    },
+    {
+      "file": "users-user.json",
+      "slug": "users-user",
+      "name": "Manage Local User Accounts",
+      "course": "rh124",
+      "tasks": 4
+    },
+    {
+      "file": "webserver-setup.json",
+      "slug": "webserver-setup",
+      "name": "Configure a Basic Web Server",
+      "course": "rh124",
+      "tasks": 6
+    }
+  ]
+}

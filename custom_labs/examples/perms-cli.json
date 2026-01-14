@@ -1,0 +1,149 @@
+{
+  "version": "1.0",
+  "metadata": {
+    "slug": "perms-cli",
+    "name": "Manage File Permissions from the Command Line",
+    "description": "Change the permissions and ownership of files with command-line tools",
+    "course": "rh124",
+    "chapter": "Chapter 6",
+    "estimated_time": "20 minutes",
+    "objectives": [
+      "Create a shared directory for a group",
+      "Change group ownership with chown",
+      "Modify permissions with chmod using symbolic and octal methods",
+      "Verify group members can access shared resources"
+    ],
+    "prerequisites": [
+      "Access to servera machine",
+      "consultants group exists",
+      "consultant1 and consultant2 users exist"
+    ],
+    "tags": ["permissions", "chmod", "chown", "group", "ownership"]
+  },
+  "environment": {
+    "hosts": [
+      {
+        "name": "servera",
+        "description": "Server for permissions practice",
+        "ssh_user": "student"
+      }
+    ],
+    "variables": {
+      "SHARED_DIR": "/home/consultants"
+    }
+  },
+  "tasks": [
+    {
+      "id": "consultants-group",
+      "name": "Verify consultants group exists",
+      "description": "The consultants group must exist",
+      "points": 1,
+      "fatal": true,
+      "checks": [
+        {
+          "type": "group_exists",
+          "host": "servera",
+          "group": "consultants"
+        }
+      ],
+      "success_message": "consultants group exists",
+      "failure_message": "consultants group not found - run 'lab start perms-cli'",
+      "hints": [
+        "Run 'lab start perms-cli' to create prerequisites"
+      ]
+    },
+    {
+      "id": "directory-exists",
+      "name": "Verify /home/consultants directory exists",
+      "description": "The shared directory must exist",
+      "points": 1,
+      "checks": [
+        {
+          "type": "directory_exists",
+          "host": "servera",
+          "path": "${SHARED_DIR}"
+        }
+      ],
+      "success_message": "/home/consultants directory exists",
+      "failure_message": "/home/consultants directory not found",
+      "hints": [
+        "Create directory: sudo mkdir /home/consultants"
+      ]
+    },
+    {
+      "id": "group-ownership",
+      "name": "Verify group ownership is consultants",
+      "description": "The directory group owner must be consultants",
+      "points": 2,
+      "checks": [
+        {
+          "type": "file_owner",
+          "host": "servera",
+          "path": "${SHARED_DIR}",
+          "group": "consultants"
+        }
+      ],
+      "success_message": "Group ownership is consultants",
+      "failure_message": "Group ownership is not consultants",
+      "hints": [
+        "Change group: sudo chown :consultants /home/consultants"
+      ]
+    },
+    {
+      "id": "permissions-770",
+      "name": "Verify directory permissions are 770",
+      "description": "Directory should have rwxrwx--- (770) permissions",
+      "points": 2,
+      "checks": [
+        {
+          "type": "file_mode",
+          "host": "servera",
+          "path": "${SHARED_DIR}",
+          "mode": "770"
+        }
+      ],
+      "success_message": "Permissions are 770 (rwxrwx---)",
+      "failure_message": "Permissions are not 770",
+      "hints": [
+        "Add group write: sudo chmod g+w /home/consultants",
+        "Remove others: sudo chmod 770 /home/consultants"
+      ]
+    },
+    {
+      "id": "consultant1-file",
+      "name": "Verify consultant1.txt exists",
+      "description": "consultant1 should have created a file in the shared directory",
+      "points": 1,
+      "checks": [
+        {
+          "type": "file_exists",
+          "host": "servera",
+          "path": "${SHARED_DIR}/consultant1.txt"
+        }
+      ],
+      "success_message": "consultant1.txt exists",
+      "failure_message": "consultant1.txt not found",
+      "hints": [
+        "As consultant1: touch /home/consultants/consultant1.txt"
+      ]
+    },
+    {
+      "id": "consultant2-file",
+      "name": "Verify consultant2.txt exists",
+      "description": "consultant2 should have created a file in the shared directory",
+      "points": 1,
+      "checks": [
+        {
+          "type": "file_exists",
+          "host": "servera",
+          "path": "${SHARED_DIR}/consultant2.txt"
+        }
+      ],
+      "success_message": "consultant2.txt exists",
+      "failure_message": "consultant2.txt not found",
+      "hints": [
+        "As consultant2: touch /home/consultants/consultant2.txt"
+      ]
+    }
+  ]
+}
