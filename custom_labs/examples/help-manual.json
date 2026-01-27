@@ -1,0 +1,121 @@
+{
+  "version": "1.0",
+  "metadata": {
+    "slug": "help-manual",
+    "name": "Get Help from Manual Pages",
+    "description": "Find information in local Linux system manual pages",
+    "course": "rh124",
+    "chapter": "Chapter 2",
+    "estimated_time": "20 minutes",
+    "objectives": [
+      "Search and browse the Linux manual pages",
+      "Use man command with section numbers",
+      "Search man pages with man -k",
+      "Use whereis to locate binaries and man pages",
+      "Open files at specific line numbers with vi"
+    ],
+    "prerequisites": [
+      "Access to workstation machine",
+      "Basic terminal usage"
+    ],
+    "tags": ["man", "help", "documentation", "vi", "whereis"]
+  },
+  "environment": {
+    "hosts": [
+      {
+        "name": "workstation",
+        "description": "Student workstation",
+        "ssh_user": "student"
+      }
+    ],
+    "variables": {
+      "MANUAL_FILE": "/home/student/manual"
+    }
+  },
+  "tasks": [
+    {
+      "id": "manual-file-exists",
+      "name": "Verify manual file exists",
+      "description": "The /home/student/manual file should exist from lab start",
+      "points": 1,
+      "fatal": true,
+      "checks": [
+        {
+          "type": "file_exists",
+          "host": "workstation",
+          "path": "${MANUAL_FILE}"
+        }
+      ],
+      "success_message": "Manual file exists at /home/student/manual",
+      "failure_message": "Manual file not found - run 'lab start help-manual' first",
+      "hints": [
+        "Run 'lab start help-manual' to create the exercise environment"
+      ]
+    },
+    {
+      "id": "manual-file-content",
+      "name": "Verify manual file has expected content",
+      "description": "The manual file should contain the expected text for the vi exercise",
+      "points": 1,
+      "checks": [
+        {
+          "type": "file_contains",
+          "host": "workstation",
+          "path": "${MANUAL_FILE}",
+          "pattern": "this is the first line"
+        },
+        {
+          "type": "file_contains",
+          "host": "workstation",
+          "path": "${MANUAL_FILE}",
+          "pattern": "quick brown fox"
+        }
+      ],
+      "success_message": "Manual file contains expected content",
+      "failure_message": "Manual file content is incorrect",
+      "hints": [
+        "The file should contain at least two lines",
+        "First line: 'this is the first line'",
+        "Second line should contain 'quick brown fox'"
+      ]
+    },
+    {
+      "id": "man-command-available",
+      "name": "Verify man command is functional",
+      "description": "The man command should be installed and working",
+      "points": 1,
+      "checks": [
+        {
+          "type": "command",
+          "host": "workstation",
+          "command": "man --version",
+          "expected_exit_code": 0
+        }
+      ],
+      "success_message": "man command is available",
+      "failure_message": "man command is not working"
+    },
+    {
+      "id": "whereis-passwd",
+      "name": "Verify whereis can locate passwd",
+      "description": "The whereis command should find passwd binary and man pages",
+      "points": 1,
+      "checks": [
+        {
+          "type": "command",
+          "host": "workstation",
+          "command": "whereis passwd | grep -q '/usr/bin/passwd'",
+          "expected_exit_code": 0
+        },
+        {
+          "type": "command",
+          "host": "workstation",
+          "command": "whereis passwd | grep -q 'man'",
+          "expected_exit_code": 0
+        }
+      ],
+      "success_message": "whereis command found passwd binary and man pages",
+      "failure_message": "whereis could not locate passwd properly"
+    }
+  ]
+}

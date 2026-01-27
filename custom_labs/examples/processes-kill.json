@@ -1,0 +1,137 @@
+{
+  "version": "1.0",
+  "metadata": {
+    "slug": "processes-kill",
+    "name": "Send Signals to Processes",
+    "description": "Send signals to processes to control their activity or to terminate execution",
+    "course": "rh124",
+    "chapter": "Chapter 9",
+    "estimated_time": "20 minutes",
+    "objectives": [
+      "Start and stop multiple shell processes",
+      "Use SIGSTOP to suspend a process",
+      "Use SIGTERM to terminate a process",
+      "Use SIGCONT to resume a stopped process",
+      "Use pkill to terminate multiple processes by name"
+    ],
+    "prerequisites": [
+      "Access to servera machine",
+      "instance script exists in PATH"
+    ],
+    "tags": ["kill", "signal", "process", "SIGSTOP", "SIGTERM", "SIGCONT", "pkill", "jobs"]
+  },
+  "environment": {
+    "hosts": [
+      {
+        "name": "servera",
+        "description": "Server for process signal practice",
+        "ssh_user": "student"
+      }
+    ],
+    "variables": {
+      "OUTFILE": "/home/student/instance_outfile"
+    }
+  },
+  "tasks": [
+    {
+      "id": "instance-script-exists",
+      "name": "Verify instance script exists",
+      "description": "The instance script must be available in PATH",
+      "points": 1,
+      "fatal": true,
+      "checks": [
+        {
+          "type": "command",
+          "host": "servera",
+          "command": "which instance || test -x /usr/local/bin/instance",
+          "expected_exit_code": 0
+        }
+      ],
+      "success_message": "instance script is available",
+      "failure_message": "instance script not found - run 'lab start processes-kill'",
+      "hints": [
+        "Run 'lab start processes-kill' to set up the environment"
+      ]
+    },
+    {
+      "id": "outfile-created",
+      "name": "Verify instance_outfile was created",
+      "description": "The output file should exist (indicates processes ran)",
+      "points": 2,
+      "checks": [
+        {
+          "type": "file_exists",
+          "host": "servera",
+          "path": "${OUTFILE}"
+        }
+      ],
+      "success_message": "instance_outfile exists (processes were executed)",
+      "failure_message": "instance_outfile not found - run instance processes first",
+      "hints": [
+        "Start processes: instance network &",
+        "instance interface &",
+        "instance connection &"
+      ]
+    },
+    {
+      "id": "outfile-has-content",
+      "name": "Verify instance_outfile has content",
+      "description": "The output file should contain process output",
+      "points": 1,
+      "checks": [
+        {
+          "type": "command",
+          "host": "servera",
+          "command": "test -s /home/student/instance_outfile",
+          "expected_exit_code": 0
+        }
+      ],
+      "success_message": "instance_outfile contains process output",
+      "failure_message": "instance_outfile is empty",
+      "hints": [
+        "Let processes run for a few seconds to generate output"
+      ]
+    },
+    {
+      "id": "no-instance-processes",
+      "name": "Verify all instance processes are terminated",
+      "description": "No instance processes should be running (final state)",
+      "points": 3,
+      "checks": [
+        {
+          "type": "command",
+          "host": "servera",
+          "command": "! pgrep -x instance && ! pgrep -f 'instance (network|interface|connection)'",
+          "expected_exit_code": 0
+        }
+      ],
+      "success_message": "All instance processes are terminated",
+      "failure_message": "Some instance processes are still running",
+      "hints": [
+        "Terminate all: pkill -SIGTERM instance",
+        "Or use: kill -SIGTERM %job_number"
+      ]
+    },
+    {
+      "id": "no-tail-process",
+      "name": "Verify tail process is terminated",
+      "description": "No tail process on instance_outfile should be running",
+      "points": 2,
+      "checks": [
+        {
+          "type": "command",
+          "host": "servera",
+          "user": "root",
+          "command": "! pgrep -f 'tail.*instance_outfile'",
+          "expected_exit_code": 0
+        }
+      ],
+      "success_message": "No tail process on instance_outfile running",
+      "failure_message": "tail process on instance_outfile is still running",
+      "hints": [
+        "Find PID: ps -ef | grep tail",
+        "Terminate: kill -SIGTERM <PID>"
+      ]
+    }
+  ]
+}

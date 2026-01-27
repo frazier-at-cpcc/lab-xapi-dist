@@ -1,0 +1,153 @@
+{
+  "version": "1.0",
+  "metadata": {
+    "slug": "flatpak-configure",
+    "name": "Configure Flatpak for Application Installation",
+    "description": "Install and configure Flatpak tools and access to remote repositories",
+    "course": "rh124",
+    "chapter": "Chapter 7",
+    "estimated_time": "20 minutes",
+    "objectives": [
+      "Verify the configuration of the preinstalled Flatpak package manager",
+      "Disable and enable a remote Flatpak repository",
+      "Add a custom remote repository",
+      "Install and remove Flatpak applications"
+    ],
+    "prerequisites": [
+      "Access to workstation machine",
+      "Flatpak packages installed",
+      "Network access to flatpak.lab.example.com"
+    ],
+    "tags": ["flatpak", "repository", "remote", "application", "runtime"]
+  },
+  "environment": {
+    "hosts": [
+      {
+        "name": "workstation",
+        "description": "Workstation for Flatpak configuration practice",
+        "ssh_user": "student"
+      }
+    ],
+    "variables": {
+      "FLATPAK_CONFIG_DIR": "/etc/flatpak",
+      "RHEL_REPO_FILE": "/etc/flatpak/remotes.d/rhel.flatpakrepo",
+      "MYREPO_URL": "http://flatpak.lab.example.com/myrepo.flatpakrepo"
+    }
+  },
+  "tasks": [
+    {
+      "id": "flatpak-installed",
+      "name": "Verify Flatpak packages are installed",
+      "description": "Flatpak package manager must be installed",
+      "points": 1,
+      "fatal": true,
+      "checks": [
+        {
+          "type": "package_installed",
+          "host": "workstation",
+          "package": "flatpak"
+        }
+      ],
+      "success_message": "Flatpak packages are installed",
+      "failure_message": "Flatpak is not installed",
+      "hints": [
+        "Install with: sudo dnf install flatpak"
+      ]
+    },
+    {
+      "id": "flatpak-config-exists",
+      "name": "Verify Flatpak configuration directory exists",
+      "description": "The /etc/flatpak directory should contain configuration files",
+      "points": 1,
+      "checks": [
+        {
+          "type": "directory_exists",
+          "host": "workstation",
+          "path": "${FLATPAK_CONFIG_DIR}"
+        }
+      ],
+      "success_message": "Flatpak configuration directory exists",
+      "failure_message": "/etc/flatpak directory not found",
+      "hints": [
+        "This directory is created when Flatpak is installed"
+      ]
+    },
+    {
+      "id": "rhel-flatpakrepo-exists",
+      "name": "Verify rhel.flatpakrepo file exists",
+      "description": "The preconfigured RHEL Flatpak repository file should exist",
+      "points": 1,
+      "checks": [
+        {
+          "type": "file_exists",
+          "host": "workstation",
+          "path": "${RHEL_REPO_FILE}"
+        }
+      ],
+      "success_message": "rhel.flatpakrepo configuration file exists",
+      "failure_message": "rhel.flatpakrepo not found in /etc/flatpak/remotes.d/",
+      "hints": [
+        "This file is part of the redhat-flatpak-repo package"
+      ]
+    },
+    {
+      "id": "rhel-remote-enabled",
+      "name": "Verify rhel remote repository is enabled",
+      "description": "The rhel remote should be re-enabled (final state)",
+      "points": 2,
+      "checks": [
+        {
+          "type": "command",
+          "host": "workstation",
+          "command": "flatpak remotes | grep -E '^rhel\\s' | grep -v disabled",
+          "expected_exit_code": 0
+        }
+      ],
+      "success_message": "rhel remote repository is enabled",
+      "failure_message": "rhel remote repository is disabled or not configured",
+      "hints": [
+        "Enable via GNOME Software: Software Repositories > Red Hat Enterprise Linux > On",
+        "Or use: flatpak remote-modify --enable rhel"
+      ]
+    },
+    {
+      "id": "myrepo-removed",
+      "name": "Verify myrepo remote is removed",
+      "description": "The custom myrepo remote should be deleted (final state)",
+      "points": 2,
+      "checks": [
+        {
+          "type": "command",
+          "host": "workstation",
+          "command": "! flatpak remotes --user 2>/dev/null | grep -q myrepo",
+          "expected_exit_code": 0
+        }
+      ],
+      "success_message": "myrepo remote repository has been removed",
+      "failure_message": "myrepo remote still exists - should be deleted",
+      "hints": [
+        "Delete with: flatpak remote-delete myrepo"
+      ]
+    },
+    {
+      "id": "freedesktop-platform-removed",
+      "name": "Verify freedesktop.Platform runtime is removed",
+      "description": "The freedesktop.Platform runtime should be uninstalled (removed with myrepo)",
+      "points": 1,
+      "checks": [
+        {
+          "type": "command",
+          "host": "workstation",
+          "command": "! flatpak list --user 2>/dev/null | grep -q org.freedesktop.Platform",
+          "expected_exit_code": 0
+        }
+      ],
+      "success_message": "freedesktop.Platform runtime has been removed",
+      "failure_message": "freedesktop.Platform runtime still installed",
+      "hints": [
+        "This should be removed when deleting myrepo",
+        "Or manually: flatpak uninstall org.freedesktop.Platform"
+      ]
+    }
+  ]
+}

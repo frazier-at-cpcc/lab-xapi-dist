@@ -1,0 +1,209 @@
+{
+  "version": "1.0",
+  "metadata": {
+    "slug": "software-repo",
+    "name": "Enable a DNF Software Repository",
+    "description": "Configure a server to get packages from a remote DNF repository, and update or install a package from that repository",
+    "course": "rh124",
+    "chapter": "Chapter 7",
+    "estimated_time": "25 minutes",
+    "objectives": [
+      "Add a custom DNF repository with dnf config-manager",
+      "Configure GPG checking for repositories",
+      "Enable and disable repositories",
+      "Create repository configuration files manually",
+      "Update packages from an errata repository"
+    ],
+    "prerequisites": [
+      "Access to servera machine",
+      "Root access via sudo",
+      "Network access to repo.example.com"
+    ],
+    "tags": ["dnf", "repository", "repo", "config-manager", "gpgcheck", "errata"]
+  },
+  "environment": {
+    "hosts": [
+      {
+        "name": "servera",
+        "description": "Server for repository configuration practice",
+        "ssh_user": "student"
+      }
+    ],
+    "variables": {
+      "CUSTOM_REPO_FILE": "/etc/yum.repos.d/repo.example.com_rhel10.0_x86_64_rhcsa-practice_rht.repo",
+      "ERRATA_REPO_FILE": "/etc/yum.repos.d/errata.repo",
+      "PACKAGE": "rht-system"
+    }
+  },
+  "tasks": [
+    {
+      "id": "custom-repo-exists",
+      "name": "Verify custom repository file exists",
+      "description": "The custom repository file should exist in /etc/yum.repos.d/",
+      "points": 1,
+      "checks": [
+        {
+          "type": "file_exists",
+          "host": "servera",
+          "path": "${CUSTOM_REPO_FILE}"
+        }
+      ],
+      "success_message": "Custom repository file exists",
+      "failure_message": "Custom repository file not found",
+      "hints": [
+        "Add repo: dnf config-manager --add-repo 'http://repo.example.com/rhel10.0/x86_64/rhcsa-practice/rht'"
+      ]
+    },
+    {
+      "id": "custom-repo-gpgcheck",
+      "name": "Verify custom repository has gpgcheck=0",
+      "description": "GPG checking should be disabled for the custom repository",
+      "points": 2,
+      "checks": [
+        {
+          "type": "file_contains",
+          "host": "servera",
+          "path": "${CUSTOM_REPO_FILE}",
+          "literal": "gpgcheck=0"
+        }
+      ],
+      "success_message": "GPG checking is disabled for custom repository",
+      "failure_message": "gpgcheck=0 not found in custom repository file",
+      "hints": [
+        "Edit the repo file and add: gpgcheck=0"
+      ]
+    },
+    {
+      "id": "custom-repo-disabled",
+      "name": "Verify custom repository is disabled",
+      "description": "The custom packages repository should be disabled",
+      "points": 1,
+      "checks": [
+        {
+          "type": "command",
+          "host": "servera",
+          "command": "grep -E '^enabled\\s*=\\s*0' /etc/yum.repos.d/repo.example.com_rhel10.0_x86_64_rhcsa-practice_rht.repo || grep -E '^enabled=0' /etc/yum.repos.d/repo.example.com_rhel10.0_x86_64_rhcsa-practice_rht.repo",
+          "expected_exit_code": 0
+        }
+      ],
+      "success_message": "Custom repository is disabled",
+      "failure_message": "Custom repository is not disabled",
+      "hints": [
+        "Disable repo: dnf config-manager --disable repo.example.com_rhel10.0_x86_64_rhcsa-practice_rht"
+      ]
+    },
+    {
+      "id": "errata-repo-exists",
+      "name": "Verify errata repository file exists",
+      "description": "The errata repository file should exist at /etc/yum.repos.d/errata.repo",
+      "points": 1,
+      "checks": [
+        {
+          "type": "file_exists",
+          "host": "servera",
+          "path": "${ERRATA_REPO_FILE}"
+        }
+      ],
+      "success_message": "Errata repository file exists",
+      "failure_message": "Errata repository file not found",
+      "hints": [
+        "Create /etc/yum.repos.d/errata.repo with [errata] section"
+      ]
+    },
+    {
+      "id": "errata-repo-baseurl",
+      "name": "Verify errata repository baseurl",
+      "description": "Errata repository should have correct baseurl",
+      "points": 1,
+      "checks": [
+        {
+          "type": "file_contains",
+          "host": "servera",
+          "path": "${ERRATA_REPO_FILE}",
+          "literal": "baseurl=http://repo.example.com/rhel10.0/x86_64/rhcsa-practice/errata"
+        }
+      ],
+      "success_message": "Errata repository has correct baseurl",
+      "failure_message": "Errata repository baseurl is incorrect",
+      "hints": [
+        "Set baseurl=http://repo.example.com/rhel10.0/x86_64/rhcsa-practice/errata"
+      ]
+    },
+    {
+      "id": "errata-repo-enabled",
+      "name": "Verify errata repository is enabled",
+      "description": "Errata repository should be enabled",
+      "points": 1,
+      "checks": [
+        {
+          "type": "file_contains",
+          "host": "servera",
+          "path": "${ERRATA_REPO_FILE}",
+          "literal": "enabled=1"
+        }
+      ],
+      "success_message": "Errata repository is enabled",
+      "failure_message": "Errata repository is not enabled",
+      "hints": [
+        "Add enabled=1 to errata.repo"
+      ]
+    },
+    {
+      "id": "errata-repo-gpgcheck",
+      "name": "Verify errata repository has gpgcheck=0",
+      "description": "GPG checking should be disabled for the errata repository",
+      "points": 1,
+      "checks": [
+        {
+          "type": "file_contains",
+          "host": "servera",
+          "path": "${ERRATA_REPO_FILE}",
+          "literal": "gpgcheck=0"
+        }
+      ],
+      "success_message": "GPG checking is disabled for errata repository",
+      "failure_message": "gpgcheck=0 not found in errata repository file",
+      "hints": [
+        "Add gpgcheck=0 to errata.repo"
+      ]
+    },
+    {
+      "id": "rht-system-installed",
+      "name": "Verify rht-system package is installed",
+      "description": "The rht-system package should be installed",
+      "points": 1,
+      "checks": [
+        {
+          "type": "package_installed",
+          "host": "servera",
+          "package": "${PACKAGE}"
+        }
+      ],
+      "success_message": "rht-system package is installed",
+      "failure_message": "rht-system package is not installed",
+      "hints": [
+        "Install: dnf install rht-system"
+      ]
+    },
+    {
+      "id": "rht-system-updated",
+      "name": "Verify rht-system is updated to version 1.0.0-2",
+      "description": "The rht-system package should be updated from errata",
+      "points": 2,
+      "checks": [
+        {
+          "type": "command",
+          "host": "servera",
+          "command": "rpm -q rht-system | grep -q '1.0.0-2'",
+          "expected_exit_code": 0
+        }
+      ],
+      "success_message": "rht-system is updated to version 1.0.0-2",
+      "failure_message": "rht-system is not version 1.0.0-2 - run dnf update",
+      "hints": [
+        "Update package: dnf update rht-system",
+        "Or update all: dnf update"
+      ]
+    }
+  ]
+}

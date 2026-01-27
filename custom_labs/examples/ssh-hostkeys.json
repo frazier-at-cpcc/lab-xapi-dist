@@ -1,0 +1,143 @@
+{
+  "version": "1.0",
+  "metadata": {
+    "slug": "ssh-hostkeys",
+    "name": "Manage SSH Host Keys",
+    "description": "Preconfigure client systems with SSH host keys of trusted servers",
+    "course": "rh124",
+    "chapter": "Chapter 12",
+    "estimated_time": "25 minutes",
+    "objectives": [
+      "Verify fingerprints of SSH host keys before logging in",
+      "Regenerate host key pairs on SSH servers",
+      "Prepopulate a system-wide known hosts file"
+    ],
+    "prerequisites": [
+      "Access to servera and serverb machines",
+      "Root access via sudo",
+      "operator1 and operator2 users exist on servera"
+    ],
+    "tags": ["ssh", "hostkeys", "known_hosts", "ssh-keygen", "ssh-keyscan", "security"]
+  },
+  "environment": {
+    "hosts": [
+      {
+        "name": "servera",
+        "description": "SSH client system",
+        "ssh_user": "student"
+      },
+      {
+        "name": "serverb",
+        "description": "SSH server with regenerated host keys",
+        "ssh_user": "student"
+      }
+    ],
+    "variables": {
+      "OPERATOR1": "operator1",
+      "OPERATOR2": "operator2",
+      "SYSTEM_KNOWN_HOSTS": "/etc/ssh/ssh_known_hosts"
+    }
+  },
+  "tasks": [
+    {
+      "id": "serverb-hostkeys-exist",
+      "name": "Verify SSH host keys exist on serverb",
+      "description": "The serverb machine should have SSH host key pairs",
+      "points": 2,
+      "checks": [
+        {
+          "type": "file_exists",
+          "host": "serverb",
+          "path": "/etc/ssh/ssh_host_ed25519_key.pub"
+        },
+        {
+          "type": "file_exists",
+          "host": "serverb",
+          "path": "/etc/ssh/ssh_host_rsa_key.pub"
+        }
+      ],
+      "success_message": "SSH host keys exist on serverb",
+      "failure_message": "SSH host keys are missing on serverb",
+      "hints": [
+        "Regenerate keys: rm -f /etc/ssh/ssh_host_* && systemctl restart sshd"
+      ]
+    },
+    {
+      "id": "operator1-known-hosts",
+      "name": "Verify operator1 has serverb in known_hosts",
+      "description": "The operator1 user on servera should have serverb in their known_hosts file",
+      "points": 2,
+      "checks": [
+        {
+          "type": "command",
+          "host": "servera",
+          "command": "grep -q serverb /home/operator1/.ssh/known_hosts 2>/dev/null",
+          "expected_exit_code": 0
+        }
+      ],
+      "success_message": "operator1 has serverb in known_hosts",
+      "failure_message": "operator1 does not have serverb in known_hosts",
+      "hints": [
+        "As operator1, SSH to serverb and accept the host key",
+        "Or use: ssh-keyscan -t ed25519 serverb >> ~/.ssh/known_hosts"
+      ]
+    },
+    {
+      "id": "system-known-hosts-exists",
+      "name": "Verify system-wide known_hosts file exists",
+      "description": "The /etc/ssh/ssh_known_hosts file should exist on servera",
+      "points": 2,
+      "checks": [
+        {
+          "type": "file_exists",
+          "host": "servera",
+          "path": "/etc/ssh/ssh_known_hosts"
+        }
+      ],
+      "success_message": "/etc/ssh/ssh_known_hosts exists on servera",
+      "failure_message": "/etc/ssh/ssh_known_hosts does not exist on servera",
+      "hints": [
+        "Create file: sudo ssh-keyscan -t ed25519 serverb >> /etc/ssh/ssh_known_hosts"
+      ]
+    },
+    {
+      "id": "system-known-hosts-serverb",
+      "name": "Verify system-wide known_hosts contains serverb",
+      "description": "The system-wide known_hosts file should contain serverb's host key",
+      "points": 3,
+      "checks": [
+        {
+          "type": "command",
+          "host": "servera",
+          "command": "grep -q 'serverb.*ssh-ed25519' /etc/ssh/ssh_known_hosts",
+          "expected_exit_code": 0
+        }
+      ],
+      "success_message": "System-wide known_hosts contains serverb ED25519 key",
+      "failure_message": "System-wide known_hosts does not contain serverb key",
+      "hints": [
+        "Add key: sudo bash -c 'ssh-keyscan -t ed25519 serverb >> /etc/ssh/ssh_known_hosts'"
+      ]
+    },
+    {
+      "id": "operator2-ssh-works",
+      "name": "Verify operator2 can SSH to serverb",
+      "description": "The operator2 user should be able to connect to serverb using system-wide known_hosts",
+      "points": 2,
+      "checks": [
+        {
+          "type": "command",
+          "host": "servera",
+          "command": "su - operator2 -c 'ssh -o BatchMode=yes -o StrictHostKeyChecking=yes -o ConnectTimeout=5 student@serverb hostname 2>/dev/null' || su - operator2 -c 'ssh -o StrictHostKeyChecking=no -o ConnectTimeout=5 student@serverb hostname 2>&1' | grep -q serverb",
+          "expected_exit_code": 0
+        }
+      ],
+      "success_message": "operator2 can SSH to serverb (host key trusted)",
+      "failure_message": "operator2 cannot SSH to serverb",
+      "hints": [
+        "Ensure /etc/ssh/ssh_known_hosts has serverb's key",
+        "Test: su - operator2 -c 'ssh student@serverb hostname'"
+      ]
+    }
+  ]
+}

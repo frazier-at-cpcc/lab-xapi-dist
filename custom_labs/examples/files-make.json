@@ -1,0 +1,130 @@
+{
+  "version": "1.0",
+  "metadata": {
+    "slug": "files-make",
+    "name": "Create Links Between Files",
+    "description": "Create and compare the use of hard links and symbolic links to reference the same file",
+    "course": "rh124",
+    "chapter": "Chapter 3",
+    "estimated_time": "15 minutes",
+    "objectives": [
+      "Create hard links between files",
+      "Create symbolic links between files",
+      "Understand the difference between hard and symbolic links"
+    ],
+    "prerequisites": [
+      "Access to servera machine",
+      "Understanding of files and directories"
+    ],
+    "tags": ["links", "hardlink", "symlink", "ln", "inode"]
+  },
+  "environment": {
+    "hosts": [
+      {
+        "name": "servera",
+        "description": "Server for link practice",
+        "ssh_user": "student"
+      }
+    ],
+    "variables": {
+      "HOME_DIR": "/home/student",
+      "TARGET_FILE": "/home/student/files/target.file",
+      "HARD_LINK": "/home/student/links/file.hardlink",
+      "SYM_LINK": "/home/student/tempdir"
+    }
+  },
+  "tasks": [
+    {
+      "id": "target-file-exists",
+      "name": "Verify target.file exists",
+      "description": "The target file must exist before creating links",
+      "points": 1,
+      "fatal": true,
+      "checks": [
+        {
+          "type": "file_exists",
+          "host": "servera",
+          "path": "${TARGET_FILE}"
+        }
+      ],
+      "success_message": "Target file exists at /home/student/files/target.file",
+      "failure_message": "Target file not found - run 'lab start files-make' first",
+      "hints": [
+        "Run 'lab start files-make' to create the required files"
+      ]
+    },
+    {
+      "id": "hard-link-created",
+      "name": "Verify hard link file.hardlink exists",
+      "description": "A hard link to target.file should exist at /home/student/links/file.hardlink",
+      "points": 2,
+      "checks": [
+        {
+          "type": "file_exists",
+          "host": "servera",
+          "path": "${HARD_LINK}"
+        },
+        {
+          "type": "command",
+          "host": "servera",
+          "command": "test $(stat -c %i /home/student/files/target.file) -eq $(stat -c %i /home/student/links/file.hardlink)",
+          "expected_exit_code": 0
+        }
+      ],
+      "success_message": "Hard link created - same inode as target file",
+      "failure_message": "Hard link missing or not linked to target file",
+      "hints": [
+        "Create hard link: ln /home/student/files/target.file /home/student/links/file.hardlink",
+        "Verify with: ls -li files/target.file links/file.hardlink",
+        "Both files should have the same inode number"
+      ]
+    },
+    {
+      "id": "hard-link-count",
+      "name": "Verify hard link count is 2",
+      "description": "The target file should have a link count of 2",
+      "points": 1,
+      "checks": [
+        {
+          "type": "command",
+          "host": "servera",
+          "command": "test $(stat -c %h /home/student/files/target.file) -eq 2",
+          "expected_exit_code": 0
+        }
+      ],
+      "success_message": "Link count is 2 (original + hard link)",
+      "failure_message": "Link count is not 2",
+      "hints": [
+        "Check link count with: ls -l files/target.file",
+        "The number after permissions should be 2"
+      ]
+    },
+    {
+      "id": "symlink-created",
+      "name": "Verify symbolic link tempdir exists",
+      "description": "A symbolic link to /tmp should exist at /home/student/tempdir",
+      "points": 2,
+      "checks": [
+        {
+          "type": "command",
+          "host": "servera",
+          "command": "test -L /home/student/tempdir",
+          "expected_exit_code": 0
+        },
+        {
+          "type": "command",
+          "host": "servera",
+          "command": "readlink /home/student/tempdir | grep -q '^/tmp$'",
+          "expected_exit_code": 0
+        }
+      ],
+      "success_message": "Symbolic link tempdir -> /tmp created",
+      "failure_message": "Symbolic link missing or pointing to wrong target",
+      "hints": [
+        "Create symbolic link: ln -s /tmp /home/student/tempdir",
+        "Verify with: ls -l /home/student/tempdir",
+        "Should show: tempdir -> /tmp"
+      ]
+    }
+  ]
+}

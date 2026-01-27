@@ -1,0 +1,158 @@
+{
+  "version": "1.0",
+  "metadata": {
+    "slug": "netbasics-validate",
+    "name": "Validate Network Configuration",
+    "description": "Test and inspect the current network configuration by using command-line utilities",
+    "course": "rh124",
+    "chapter": "Chapter 11",
+    "estimated_time": "15 minutes",
+    "objectives": [
+      "Identify current network interfaces with ip link",
+      "Display IP addresses with ip addr",
+      "View packet statistics with ip -s link",
+      "Examine routing table with ip route",
+      "Test connectivity with ping and tracepath",
+      "Display listening sockets with ss"
+    ],
+    "prerequisites": [
+      "Access to servera machine",
+      "Network connectivity configured"
+    ],
+    "tags": ["ip", "network", "interface", "route", "ping", "tracepath", "ss", "socket"]
+  },
+  "environment": {
+    "hosts": [
+      {
+        "name": "servera",
+        "description": "Server for network configuration validation",
+        "ssh_user": "student"
+      }
+    ],
+    "variables": {
+      "GATEWAY": "172.25.250.254",
+      "NETWORK": "172.25.250.0/24"
+    }
+  },
+  "tasks": [
+    {
+      "id": "interface-up",
+      "name": "Verify network interface is UP",
+      "description": "At least one network interface (besides lo) should be UP",
+      "points": 1,
+      "fatal": true,
+      "checks": [
+        {
+          "type": "command",
+          "host": "servera",
+          "command": "ip link show | grep -E 'state UP' | grep -v lo",
+          "expected_exit_code": 0
+        }
+      ],
+      "success_message": "Network interface is UP",
+      "failure_message": "No network interface is UP",
+      "hints": [
+        "Check interfaces: ip link show"
+      ]
+    },
+    {
+      "id": "ip-address-configured",
+      "name": "Verify IP address is configured",
+      "description": "An IP address should be configured on a network interface",
+      "points": 2,
+      "checks": [
+        {
+          "type": "command",
+          "host": "servera",
+          "command": "ip -br addr | grep -v lo | grep -E '[0-9]+\\.[0-9]+\\.[0-9]+\\.[0-9]+'",
+          "expected_exit_code": 0
+        }
+      ],
+      "success_message": "IP address is configured",
+      "failure_message": "No IP address configured on network interface",
+      "hints": [
+        "Check addresses: ip -br addr",
+        "Or: ip addr show"
+      ]
+    },
+    {
+      "id": "default-route-exists",
+      "name": "Verify default route exists",
+      "description": "A default gateway route should be configured",
+      "points": 2,
+      "checks": [
+        {
+          "type": "command",
+          "host": "servera",
+          "command": "ip route | grep -q '^default'",
+          "expected_exit_code": 0
+        }
+      ],
+      "success_message": "Default route is configured",
+      "failure_message": "No default route configured",
+      "hints": [
+        "Check routing: ip route"
+      ]
+    },
+    {
+      "id": "gateway-reachable",
+      "name": "Verify gateway is reachable",
+      "description": "The default gateway should respond to ping",
+      "points": 2,
+      "checks": [
+        {
+          "type": "command",
+          "host": "servera",
+          "command": "ping -c1 -W2 $(ip route | grep default | awk '{print $3}') >/dev/null 2>&1",
+          "expected_exit_code": 0
+        }
+      ],
+      "success_message": "Gateway is reachable",
+      "failure_message": "Cannot reach default gateway",
+      "hints": [
+        "Test with: ping -c3 <gateway_ip>",
+        "Find gateway: ip route | grep default"
+      ]
+    },
+    {
+      "id": "dns-resolution-works",
+      "name": "Verify DNS resolution works",
+      "description": "Should be able to resolve hostnames",
+      "points": 1,
+      "checks": [
+        {
+          "type": "command",
+          "host": "servera",
+          "command": "getent hosts classroom.example.com || host classroom.example.com || nslookup classroom.example.com",
+          "expected_exit_code": 0
+        }
+      ],
+      "success_message": "DNS resolution is working",
+      "failure_message": "DNS resolution failed",
+      "hints": [
+        "Test with: getent hosts classroom.example.com",
+        "Or: host classroom.example.com"
+      ]
+    },
+    {
+      "id": "ssh-listening",
+      "name": "Verify SSH service is listening",
+      "description": "The SSH service should be listening on port 22",
+      "points": 1,
+      "checks": [
+        {
+          "type": "command",
+          "host": "servera",
+          "command": "ss -lt | grep -q ssh",
+          "expected_exit_code": 0
+        }
+      ],
+      "success_message": "SSH service is listening",
+      "failure_message": "SSH service is not listening",
+      "hints": [
+        "Check listening sockets: ss -lt",
+        "Or: ss -tlnp | grep :22"
+      ]
+    }
+  ]
+}

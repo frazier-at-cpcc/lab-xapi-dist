@@ -1,0 +1,148 @@
+{
+  "version": "1.0",
+  "metadata": {
+    "slug": "ssh-keyauth",
+    "name": "Configure SSH Key-based Authentication",
+    "description": "Enable secure remote access by configuring key-based authentication",
+    "course": "rh124",
+    "chapter": "Chapter 12",
+    "estimated_time": "25 minutes",
+    "objectives": [
+      "Generate an SSH key pair without passphrase protection",
+      "Generate an SSH key pair with passphrase protection",
+      "Configure ssh-copy-id to send public keys to remote hosts",
+      "Use ssh-agent for passphrase management"
+    ],
+    "prerequisites": [
+      "Access to servera and serverb machines",
+      "operator1 user exists on both systems"
+    ],
+    "tags": ["ssh", "ssh-keygen", "ssh-copy-id", "ssh-agent", "key-based-auth", "security"]
+  },
+  "environment": {
+    "hosts": [
+      {
+        "name": "servera",
+        "description": "SSH client with operator1 user",
+        "ssh_user": "student"
+      },
+      {
+        "name": "serverb",
+        "description": "SSH server accepting key-based auth",
+        "ssh_user": "student"
+      }
+    ],
+    "variables": {
+      "OPERATOR_USER": "operator1",
+      "DEFAULT_KEY": "id_ed25519",
+      "PROTECTED_KEY": "protected-key"
+    }
+  },
+  "tasks": [
+    {
+      "id": "default-key-exists",
+      "name": "Verify default SSH key pair exists for operator1",
+      "description": "The operator1 user on servera should have an unprotected SSH key pair",
+      "points": 2,
+      "checks": [
+        {
+          "type": "file_exists",
+          "host": "servera",
+          "path": "/home/operator1/.ssh/id_ed25519"
+        },
+        {
+          "type": "file_exists",
+          "host": "servera",
+          "path": "/home/operator1/.ssh/id_ed25519.pub"
+        }
+      ],
+      "success_message": "Default SSH key pair exists for operator1",
+      "failure_message": "Default SSH key pair not found for operator1",
+      "hints": [
+        "As operator1: ssh-keygen (accept defaults, empty passphrase)"
+      ]
+    },
+    {
+      "id": "protected-key-exists",
+      "name": "Verify passphrase-protected key pair exists",
+      "description": "The operator1 user should have a passphrase-protected key named protected-key",
+      "points": 2,
+      "checks": [
+        {
+          "type": "file_exists",
+          "host": "servera",
+          "path": "/home/operator1/.ssh/protected-key"
+        },
+        {
+          "type": "file_exists",
+          "host": "servera",
+          "path": "/home/operator1/.ssh/protected-key.pub"
+        }
+      ],
+      "success_message": "Protected key pair exists for operator1",
+      "failure_message": "Protected key pair not found for operator1",
+      "hints": [
+        "As operator1: ssh-keygen -f ~/.ssh/protected-key",
+        "Enter a passphrase when prompted"
+      ]
+    },
+    {
+      "id": "serverb-authorized-keys",
+      "name": "Verify operator1 on serverb has authorized_keys",
+      "description": "The operator1 user on serverb should have an authorized_keys file",
+      "points": 2,
+      "checks": [
+        {
+          "type": "file_exists",
+          "host": "serverb",
+          "path": "/home/operator1/.ssh/authorized_keys"
+        }
+      ],
+      "success_message": "authorized_keys file exists on serverb",
+      "failure_message": "authorized_keys file not found on serverb",
+      "hints": [
+        "From servera as operator1: ssh-copy-id operator1@serverb"
+      ]
+    },
+    {
+      "id": "default-key-authorized",
+      "name": "Verify default public key is in authorized_keys",
+      "description": "The default public key should be authorized on serverb",
+      "points": 2,
+      "checks": [
+        {
+          "type": "command",
+          "host": "serverb",
+          "command": "grep -q 'operator1@servera' /home/operator1/.ssh/authorized_keys 2>/dev/null || grep -c 'ssh-ed25519' /home/operator1/.ssh/authorized_keys | grep -q '[1-9]'",
+          "expected_exit_code": 0
+        }
+      ],
+      "success_message": "Default public key is authorized on serverb",
+      "failure_message": "Default public key not found in authorized_keys",
+      "hints": [
+        "From servera as operator1: ssh-copy-id operator1@serverb"
+      ]
+    },
+    {
+      "id": "ssh-key-auth-works",
+      "name": "Verify SSH key authentication works",
+      "description": "operator1 should be able to SSH from servera to serverb using key-based auth",
+      "points": 3,
+      "checks": [
+        {
+          "type": "command",
+          "host": "servera",
+          "user": "root",
+          "command": "su - operator1 -c 'ssh -o BatchMode=yes -o StrictHostKeyChecking=no -o ConnectTimeout=5 operator1@serverb hostname' 2>/dev/null | grep -q serverb",
+          "expected_exit_code": 0
+        }
+      ],
+      "success_message": "SSH key-based authentication works",
+      "failure_message": "SSH key-based authentication failed",
+      "hints": [
+        "Ensure public key is copied: ssh-copy-id operator1@serverb",
+        "Test: ssh operator1@serverb hostname"
+      ]
+    }
+  ]
+}

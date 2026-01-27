@@ -1,0 +1,182 @@
+{
+  "version": "1.0",
+  "metadata": {
+    "slug": "net-configure",
+    "name": "Configure Networking from the Command Line",
+    "description": "Manage network settings and devices from the command line by using the nmcli command",
+    "course": "rh124",
+    "chapter": "Chapter 11",
+    "estimated_time": "25 minutes",
+    "objectives": [
+      "View network connections with nmcli con show",
+      "Create static IP connections with nmcli con add",
+      "Configure IPv4 addresses manually",
+      "Verify network connectivity between systems"
+    ],
+    "prerequisites": [
+      "Access to servera and serverb machines",
+      "Root access via sudo",
+      "Secondary network interface (ens4) available"
+    ],
+    "tags": ["nmcli", "network", "static", "ip", "connection", "NetworkManager"]
+  },
+  "environment": {
+    "hosts": [
+      {
+        "name": "servera",
+        "description": "Server A for network configuration",
+        "ssh_user": "student"
+      },
+      {
+        "name": "serverb",
+        "description": "Server B for network configuration",
+        "ssh_user": "student"
+      }
+    ],
+    "variables": {
+      "SERVERA_IP": "172.24.250.30",
+      "SERVERB_IP": "172.24.250.40",
+      "NETMASK": "24",
+      "CONNECTION_NAME": "static-addr",
+      "INTERFACE": "ens4"
+    }
+  },
+  "tasks": [
+    {
+      "id": "servera-connection-exists",
+      "name": "Verify static-addr connection exists on servera",
+      "description": "The static-addr connection should be configured on servera",
+      "points": 2,
+      "checks": [
+        {
+          "type": "command",
+          "host": "servera",
+          "command": "nmcli con show static-addr 2>/dev/null | grep -q 'connection.id'",
+          "expected_exit_code": 0
+        }
+      ],
+      "success_message": "static-addr connection exists on servera",
+      "failure_message": "static-addr connection not found on servera",
+      "hints": [
+        "Create connection: nmcli con add con-name static-addr type ethernet ifname ens4 ipv4.method manual ipv4.addresses 172.24.250.30/24"
+      ]
+    },
+    {
+      "id": "servera-ip-configured",
+      "name": "Verify servera has IP 172.24.250.30/24 on ens4",
+      "description": "The ens4 interface should have the static IP address configured",
+      "points": 2,
+      "checks": [
+        {
+          "type": "command",
+          "host": "servera",
+          "command": "ip addr show ens4 2>/dev/null | grep -q '172.24.250.30/24' || nmcli -f IP4.ADDRESS dev show ens4 2>/dev/null | grep -q '172.24.250.30/24'",
+          "expected_exit_code": 0
+        }
+      ],
+      "success_message": "servera ens4 has IP 172.24.250.30/24",
+      "failure_message": "servera ens4 does not have IP 172.24.250.30/24",
+      "hints": [
+        "Activate connection: nmcli con up static-addr",
+        "Check IP: ip addr show ens4"
+      ]
+    },
+    {
+      "id": "servera-connection-active",
+      "name": "Verify static-addr is active on servera",
+      "description": "The static-addr connection should be active on the ens4 device",
+      "points": 1,
+      "checks": [
+        {
+          "type": "command",
+          "host": "servera",
+          "command": "nmcli con show --active | grep -q static-addr",
+          "expected_exit_code": 0
+        }
+      ],
+      "success_message": "static-addr connection is active on servera",
+      "failure_message": "static-addr connection is not active on servera",
+      "hints": [
+        "Activate: nmcli con up static-addr"
+      ]
+    },
+    {
+      "id": "serverb-connection-exists",
+      "name": "Verify static-addr connection exists on serverb",
+      "description": "The static-addr connection should be configured on serverb",
+      "points": 2,
+      "checks": [
+        {
+          "type": "command",
+          "host": "serverb",
+          "command": "nmcli con show static-addr 2>/dev/null | grep -q 'connection.id'",
+          "expected_exit_code": 0
+        }
+      ],
+      "success_message": "static-addr connection exists on serverb",
+      "failure_message": "static-addr connection not found on serverb",
+      "hints": [
+        "Create connection: nmcli con add con-name static-addr type ethernet ifname ens4 ipv4.method manual ipv4.addresses 172.24.250.40/24"
+      ]
+    },
+    {
+      "id": "serverb-ip-configured",
+      "name": "Verify serverb has IP 172.24.250.40/24 on ens4",
+      "description": "The ens4 interface should have the static IP address configured",
+      "points": 2,
+      "checks": [
+        {
+          "type": "command",
+          "host": "serverb",
+          "command": "ip addr show ens4 2>/dev/null | grep -q '172.24.250.40/24' || nmcli -f IP4.ADDRESS dev show ens4 2>/dev/null | grep -q '172.24.250.40/24'",
+          "expected_exit_code": 0
+        }
+      ],
+      "success_message": "serverb ens4 has IP 172.24.250.40/24",
+      "failure_message": "serverb ens4 does not have IP 172.24.250.40/24",
+      "hints": [
+        "Activate connection: nmcli con up static-addr",
+        "Check IP: ip addr show ens4"
+      ]
+    },
+    {
+      "id": "serverb-connection-active",
+      "name": "Verify static-addr is active on serverb",
+      "description": "The static-addr connection should be active on the ens4 device",
+      "points": 1,
+      "checks": [
+        {
+          "type": "command",
+          "host": "serverb",
+          "command": "nmcli con show --active | grep -q static-addr",
+          "expected_exit_code": 0
+        }
+      ],
+      "success_message": "static-addr connection is active on serverb",
+      "failure_message": "static-addr connection is not active on serverb",
+      "hints": [
+        "Activate: nmcli con up static-addr"
+      ]
+    },
+    {
+      "id": "connectivity-test",
+      "name": "Verify connectivity between servera and serverb",
+      "description": "serverb should be able to ping servera on 172.24.250.30",
+      "points": 2,
+      "checks": [
+        {
+          "type": "command",
+          "host": "serverb",
+          "command": "ping -c1 -W2 172.24.250.30 >/dev/null 2>&1",
+          "expected_exit_code": 0
+        }
+      ],
+      "success_message": "serverb can ping servera (172.24.250.30)",
+      "failure_message": "serverb cannot ping servera - check network configuration",
+      "hints": [
+        "Ensure both connections are active",
+        "Test: ping -c3 172.24.250.30"
+      ]
+    }
+  ]
+}

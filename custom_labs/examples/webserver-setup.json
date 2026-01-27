@@ -1,0 +1,154 @@
+{
+  "version": "1.0",
+  "metadata": {
+    "slug": "webserver-setup",
+    "name": "Configure a Basic Web Server",
+    "description": "Install and configure Apache HTTP Server with a custom home page",
+    "course": "rh124",
+    "chapter": "Chapter 10",
+    "estimated_time": "20 minutes",
+    "objectives": [
+      "Install the Apache HTTP Server package",
+      "Configure and enable the httpd service",
+      "Create a custom index.html page",
+      "Configure the firewall to allow HTTP traffic"
+    ],
+    "prerequisites": [
+      "Basic Linux command line skills",
+      "Understanding of systemd services"
+    ],
+    "tags": ["web", "apache", "httpd", "firewall"]
+  },
+  "environment": {
+    "hosts": [
+      {
+        "name": "servera",
+        "description": "Web server host",
+        "ssh_user": "student",
+        "ssh_key": "~/.ssh/lab_rsa"
+      }
+    ],
+    "variables": {
+      "WEB_ROOT": "/var/www/html",
+      "SERVICE_NAME": "httpd"
+    }
+  },
+  "tasks": [
+    {
+      "id": "install-httpd",
+      "name": "Verify httpd package is installed",
+      "description": "The Apache HTTP Server package must be installed",
+      "points": 1,
+      "checks": [
+        {
+          "type": "package_installed",
+          "host": "servera",
+          "package": "httpd"
+        }
+      ],
+      "success_message": "httpd package is installed",
+      "failure_message": "httpd package is not installed",
+      "hints": [
+        "Use 'sudo dnf install httpd' to install the package"
+      ]
+    },
+    {
+      "id": "service-running",
+      "name": "Verify httpd service is running",
+      "description": "The httpd service must be started",
+      "points": 1,
+      "checks": [
+        {
+          "type": "service_running",
+          "host": "servera",
+          "service": "httpd"
+        }
+      ],
+      "success_message": "httpd service is active",
+      "failure_message": "httpd service is not running",
+      "hints": [
+        "Use 'sudo systemctl start httpd' to start the service"
+      ]
+    },
+    {
+      "id": "service-enabled",
+      "name": "Verify httpd service is enabled",
+      "description": "The httpd service must be enabled to start at boot",
+      "points": 1,
+      "checks": [
+        {
+          "type": "service_enabled",
+          "host": "servera",
+          "service": "httpd"
+        }
+      ],
+      "success_message": "httpd service is enabled",
+      "failure_message": "httpd service is not enabled",
+      "hints": [
+        "Use 'sudo systemctl enable httpd' to enable the service"
+      ]
+    },
+    {
+      "id": "index-exists",
+      "name": "Verify custom index.html exists",
+      "description": "A custom index.html file must exist in the web root",
+      "points": 2,
+      "checks": [
+        {
+          "type": "file_exists",
+          "host": "servera",
+          "path": "${WEB_ROOT}/index.html"
+        },
+        {
+          "type": "file_contains",
+          "host": "servera",
+          "path": "${WEB_ROOT}/index.html",
+          "pattern": "<html|<!DOCTYPE"
+        }
+      ],
+      "success_message": "Custom index.html found",
+      "failure_message": "index.html not found or invalid",
+      "hints": [
+        "Create /var/www/html/index.html with valid HTML content",
+        "Ensure the file contains proper HTML tags"
+      ]
+    },
+    {
+      "id": "firewall-http",
+      "name": "Verify firewall allows HTTP traffic",
+      "description": "The firewall must allow HTTP (port 80) traffic",
+      "points": 1,
+      "checks": [
+        {
+          "type": "firewall_port",
+          "host": "servera",
+          "port": "80/tcp",
+          "zone": "public",
+          "permanent": true
+        }
+      ],
+      "success_message": "HTTP port is open in firewall",
+      "failure_message": "HTTP port is not open in firewall",
+      "hints": [
+        "Use 'sudo firewall-cmd --permanent --add-service=http'",
+        "Don't forget to reload: 'sudo firewall-cmd --reload'"
+      ]
+    },
+    {
+      "id": "port-listening",
+      "name": "Verify web server is listening on port 80",
+      "description": "The web server must be listening on TCP port 80",
+      "points": 1,
+      "checks": [
+        {
+          "type": "port_listening",
+          "host": "servera",
+          "port": 80,
+          "protocol": "tcp"
+        }
+      ],
+      "success_message": "Web server is listening on port 80",
+      "failure_message": "Web server is not listening on port 80"
+    }
+  ]
+}

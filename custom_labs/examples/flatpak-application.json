@@ -1,0 +1,157 @@
+{
+  "version": "1.0",
+  "metadata": {
+    "slug": "flatpak-application",
+    "name": "Manage Applications from Flatpak",
+    "description": "List, search, install, remove, and get metadata information of applications by using Flatpak",
+    "course": "rh124",
+    "chapter": "Chapter 7",
+    "estimated_time": "25 minutes",
+    "objectives": [
+      "Use Flatpak commands to manage applications and runtimes",
+      "Install applications and review their information",
+      "Uninstall Flatpak applications and their dependencies"
+    ],
+    "prerequisites": [
+      "Access to workstation machine",
+      "rhel and myrepo Flatpak remotes configured",
+      "Flatpak packages installed"
+    ],
+    "tags": ["flatpak", "application", "install", "uninstall", "runtime", "codium", "obsidian"]
+  },
+  "environment": {
+    "hosts": [
+      {
+        "name": "workstation",
+        "description": "Workstation for Flatpak application management",
+        "ssh_user": "student"
+      }
+    ],
+    "variables": {
+      "CODIUM_ID": "com.vscodium.codium",
+      "OBSIDIAN_ID": "md.obsidian.Obsidian",
+      "PLATFORM_ID": "org.freedesktop.Platform",
+      "SDK_ID": "org.freedesktop.Sdk"
+    }
+  },
+  "tasks": [
+    {
+      "id": "remotes-configured",
+      "name": "Verify Flatpak remotes are configured",
+      "description": "Both rhel and myrepo remotes should be available",
+      "points": 1,
+      "fatal": true,
+      "checks": [
+        {
+          "type": "command",
+          "host": "workstation",
+          "command": "flatpak remotes | grep -E '^(rhel|myrepo)' | wc -l | grep -q '[12]'",
+          "expected_exit_code": 0
+        }
+      ],
+      "success_message": "Flatpak remotes are configured",
+      "failure_message": "Required Flatpak remotes not found - run 'lab start flatpak-application'",
+      "hints": [
+        "Run 'lab start flatpak-application' to configure remotes"
+      ]
+    },
+    {
+      "id": "codium-uninstalled",
+      "name": "Verify VSCodium is uninstalled",
+      "description": "The com.vscodium.codium application should be removed",
+      "points": 2,
+      "checks": [
+        {
+          "type": "command",
+          "host": "workstation",
+          "command": "! flatpak list --user 2>/dev/null | grep -qi codium",
+          "expected_exit_code": 0
+        }
+      ],
+      "success_message": "VSCodium application is uninstalled",
+      "failure_message": "VSCodium is still installed - should be removed",
+      "hints": [
+        "Uninstall with: flatpak uninstall com.vscodium.codium"
+      ]
+    },
+    {
+      "id": "obsidian-uninstalled",
+      "name": "Verify Obsidian is uninstalled",
+      "description": "The md.obsidian.Obsidian application should be removed",
+      "points": 2,
+      "checks": [
+        {
+          "type": "command",
+          "host": "workstation",
+          "command": "! flatpak list --user 2>/dev/null | grep -qi obsidian",
+          "expected_exit_code": 0
+        }
+      ],
+      "success_message": "Obsidian application is uninstalled",
+      "failure_message": "Obsidian is still installed - should be removed",
+      "hints": [
+        "Uninstall via GNOME Software or: flatpak uninstall md.obsidian.Obsidian"
+      ]
+    },
+    {
+      "id": "sdk-uninstalled",
+      "name": "Verify Freedesktop SDK is uninstalled",
+      "description": "The org.freedesktop.Sdk runtime should be removed",
+      "points": 1,
+      "checks": [
+        {
+          "type": "command",
+          "host": "workstation",
+          "command": "! flatpak list --user 2>/dev/null | grep -q 'org.freedesktop.Sdk'",
+          "expected_exit_code": 0
+        }
+      ],
+      "success_message": "Freedesktop SDK runtime is uninstalled",
+      "failure_message": "Freedesktop SDK is still installed - should be removed",
+      "hints": [
+        "Uninstall with: flatpak uninstall org.freedesktop.Sdk",
+        "Must uninstall codium first (it depends on SDK)"
+      ]
+    },
+    {
+      "id": "platform-uninstalled",
+      "name": "Verify Freedesktop Platform is uninstalled",
+      "description": "The org.freedesktop.Platform runtime should be removed",
+      "points": 1,
+      "checks": [
+        {
+          "type": "command",
+          "host": "workstation",
+          "command": "! flatpak list --user 2>/dev/null | grep -q 'org.freedesktop.Platform'",
+          "expected_exit_code": 0
+        }
+      ],
+      "success_message": "Freedesktop Platform runtime is uninstalled",
+      "failure_message": "Freedesktop Platform is still installed - should be removed",
+      "hints": [
+        "Uninstall via GNOME Software or: flatpak uninstall org.freedesktop.Platform",
+        "Must uninstall Obsidian first (it depends on Platform)"
+      ]
+    },
+    {
+      "id": "no-flatpaks-installed",
+      "name": "Verify no user Flatpak objects remain",
+      "description": "All user Flatpak applications and runtimes should be removed",
+      "points": 2,
+      "checks": [
+        {
+          "type": "command",
+          "host": "workstation",
+          "command": "test -z \"$(flatpak list --user 2>/dev/null | grep -v '^$')\"",
+          "expected_exit_code": 0
+        }
+      ],
+      "success_message": "No user Flatpak objects installed (clean state)",
+      "failure_message": "Some Flatpak objects are still installed",
+      "hints": [
+        "List installed: flatpak list --user",
+        "Remove all unused: flatpak uninstall --unused"
+      ]
+    }
+  ]
+}

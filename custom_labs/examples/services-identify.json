@@ -1,0 +1,148 @@
+{
+  "version": "1.0",
+  "metadata": {
+    "slug": "services-identify",
+    "name": "Identify System Processes that Start Automatically",
+    "description": "List the installed service units and identify which services are currently enabled and active on a server",
+    "course": "rh124",
+    "chapter": "Chapter 10",
+    "estimated_time": "15 minutes",
+    "objectives": [
+      "List the installed service units with systemctl",
+      "List socket units with systemctl",
+      "Identify active and enabled services on the system",
+      "Check service status with systemctl status",
+      "Use systemctl is-enabled and is-active commands"
+    ],
+    "prerequisites": [
+      "Access to servera machine"
+    ],
+    "tags": ["systemctl", "service", "socket", "enabled", "active", "chronyd", "sshd"]
+  },
+  "environment": {
+    "hosts": [
+      {
+        "name": "servera",
+        "description": "Server for service identification practice",
+        "ssh_user": "student"
+      }
+    ],
+    "variables": {}
+  },
+  "tasks": [
+    {
+      "id": "systemctl-available",
+      "name": "Verify systemctl command is available",
+      "description": "The systemctl command must be available",
+      "points": 1,
+      "fatal": true,
+      "checks": [
+        {
+          "type": "command",
+          "host": "servera",
+          "command": "which systemctl",
+          "expected_exit_code": 0
+        }
+      ],
+      "success_message": "systemctl command is available",
+      "failure_message": "systemctl command not found",
+      "hints": [
+        "systemctl should be available on any systemd-based system"
+      ]
+    },
+    {
+      "id": "chronyd-active",
+      "name": "Verify chronyd service is active",
+      "description": "The chronyd NTP service should be running",
+      "points": 2,
+      "checks": [
+        {
+          "type": "service_running",
+          "host": "servera",
+          "service": "chronyd"
+        }
+      ],
+      "success_message": "chronyd service is active (running)",
+      "failure_message": "chronyd service is not running",
+      "hints": [
+        "Check status: systemctl status chronyd",
+        "Check if active: systemctl is-active chronyd"
+      ]
+    },
+    {
+      "id": "chronyd-enabled",
+      "name": "Verify chronyd service is enabled",
+      "description": "The chronyd service should be enabled to start at boot",
+      "points": 1,
+      "checks": [
+        {
+          "type": "service_enabled",
+          "host": "servera",
+          "service": "chronyd"
+        }
+      ],
+      "success_message": "chronyd service is enabled",
+      "failure_message": "chronyd service is not enabled",
+      "hints": [
+        "Check if enabled: systemctl is-enabled chronyd"
+      ]
+    },
+    {
+      "id": "sshd-active",
+      "name": "Verify sshd service is active",
+      "description": "The sshd service should be running for SSH access",
+      "points": 2,
+      "checks": [
+        {
+          "type": "service_running",
+          "host": "servera",
+          "service": "sshd"
+        }
+      ],
+      "success_message": "sshd service is active (running)",
+      "failure_message": "sshd service is not running",
+      "hints": [
+        "Check status: systemctl status sshd",
+        "Check if active: systemctl is-active sshd"
+      ]
+    },
+    {
+      "id": "sshd-enabled",
+      "name": "Verify sshd service is enabled",
+      "description": "The sshd service should be enabled to start at boot",
+      "points": 1,
+      "checks": [
+        {
+          "type": "service_enabled",
+          "host": "servera",
+          "service": "sshd"
+        }
+      ],
+      "success_message": "sshd service is enabled",
+      "failure_message": "sshd service is not enabled",
+      "hints": [
+        "Check if enabled: systemctl is-enabled sshd"
+      ]
+    },
+    {
+      "id": "chronyd-process-running",
+      "name": "Verify chronyd process exists",
+      "description": "The chronyd daemon process should be visible with ps",
+      "points": 1,
+      "checks": [
+        {
+          "type": "command",
+          "host": "servera",
+          "command": "pgrep chronyd",
+          "expected_exit_code": 0
+        }
+      ],
+      "success_message": "chronyd process is running",
+      "failure_message": "chronyd process not found",
+      "hints": [
+        "Get PID from systemctl status chronyd",
+        "Verify with: ps -p <PID>"
+      ]
+    }
+  ]
+}
