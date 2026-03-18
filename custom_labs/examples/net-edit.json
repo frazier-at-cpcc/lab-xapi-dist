@@ -1,0 +1,185 @@
+{
+  "version": "1.0",
+  "metadata": {
+    "slug": "net-edit",
+    "name": "Edit Network Configuration Files",
+    "description": "Modify network configuration by editing configuration files",
+    "course": "rh124",
+    "chapter": "Chapter 11",
+    "estimated_time": "25 minutes",
+    "objectives": [
+      "Modify connection profiles with nmcli con mod",
+      "Edit NetworkManager configuration files directly",
+      "Add secondary IP addresses to network interfaces",
+      "Reload and activate modified connections"
+    ],
+    "prerequisites": [
+      "Access to servera and serverb machines",
+      "Root access via sudo",
+      "Secondary network interface (ens4) available"
+    ],
+    "tags": ["nmcli", "network", "edit", "configuration", "nmconnection", "secondary-ip"]
+  },
+  "environment": {
+    "hosts": [
+      {
+        "name": "servera",
+        "description": "Server A for network configuration editing",
+        "ssh_user": "student"
+      },
+      {
+        "name": "serverb",
+        "description": "Server B for network configuration editing",
+        "ssh_user": "student"
+      }
+    ],
+    "variables": {
+      "SERVERA_PRIMARY_IP": "172.24.250.30",
+      "SERVERA_SECONDARY_IP": "10.0.1.1",
+      "SERVERB_PRIMARY_IP": "172.24.250.40",
+      "SERVERB_SECONDARY_IP": "10.0.1.2",
+      "NETMASK": "24",
+      "INTERFACE": "ens4"
+    }
+  },
+  "tasks": [
+    {
+      "id": "servera-primary-ip",
+      "name": "Verify servera has primary IP 172.24.250.30/24",
+      "description": "The ens4 interface should have the primary static IP address",
+      "points": 2,
+      "checks": [
+        {
+          "type": "command",
+          "host": "servera",
+          "command": "ip addr show ens4 | grep -q '172.24.250.30/24'",
+          "expected_exit_code": 0
+        }
+      ],
+      "success_message": "servera ens4 has primary IP 172.24.250.30/24",
+      "failure_message": "servera ens4 does not have IP 172.24.250.30/24",
+      "hints": [
+        "Modify connection: nmcli con mod 'Wired connection 1' ipv4.method manual ipv4.addresses 172.24.250.30/24"
+      ]
+    },
+    {
+      "id": "servera-secondary-ip",
+      "name": "Verify servera has secondary IP 10.0.1.1/24",
+      "description": "The ens4 interface should have the secondary IP address",
+      "points": 3,
+      "checks": [
+        {
+          "type": "command",
+          "host": "servera",
+          "command": "ip addr show ens4 | grep -q '10.0.1.1/24'",
+          "expected_exit_code": 0
+        }
+      ],
+      "success_message": "servera ens4 has secondary IP 10.0.1.1/24",
+      "failure_message": "servera ens4 does not have secondary IP 10.0.1.1/24",
+      "hints": [
+        "Edit /etc/NetworkManager/system-connections/Wired\\ connection\\ 1.nmconnection",
+        "Add: address2=10.0.1.1/24",
+        "Then: nmcli con reload && nmcli con up 'Wired connection 1'"
+      ]
+    },
+    {
+      "id": "servera-connection-active",
+      "name": "Verify Wired connection 1 is active on servera",
+      "description": "The modified connection should be active on ens4",
+      "points": 1,
+      "checks": [
+        {
+          "type": "command",
+          "host": "servera",
+          "command": "nmcli con show --active | grep -E 'Wired connection 1.*ens4'",
+          "expected_exit_code": 0
+        }
+      ],
+      "success_message": "Wired connection 1 is active on servera",
+      "failure_message": "Wired connection 1 is not active on servera",
+      "hints": [
+        "Activate: nmcli con up 'Wired connection 1'"
+      ]
+    },
+    {
+      "id": "serverb-primary-ip",
+      "name": "Verify serverb has primary IP 172.24.250.40/24",
+      "description": "The ens4 interface should have the primary static IP address",
+      "points": 2,
+      "checks": [
+        {
+          "type": "command",
+          "host": "serverb",
+          "command": "ip addr show ens4 | grep -q '172.24.250.40/24'",
+          "expected_exit_code": 0
+        }
+      ],
+      "success_message": "serverb ens4 has primary IP 172.24.250.40/24",
+      "failure_message": "serverb ens4 does not have IP 172.24.250.40/24",
+      "hints": [
+        "Modify connection: nmcli con mod 'Wired connection 1' ipv4.method manual ipv4.addresses 172.24.250.40/24"
+      ]
+    },
+    {
+      "id": "serverb-secondary-ip",
+      "name": "Verify serverb has secondary IP 10.0.1.2/24",
+      "description": "The ens4 interface should have the secondary IP address",
+      "points": 3,
+      "checks": [
+        {
+          "type": "command",
+          "host": "serverb",
+          "command": "ip addr show ens4 | grep -q '10.0.1.2/24'",
+          "expected_exit_code": 0
+        }
+      ],
+      "success_message": "serverb ens4 has secondary IP 10.0.1.2/24",
+      "failure_message": "serverb ens4 does not have secondary IP 10.0.1.2/24",
+      "hints": [
+        "Edit /etc/NetworkManager/system-connections/Wired\\ connection\\ 1.nmconnection",
+        "Add: address2=10.0.1.2/24",
+        "Then: nmcli con reload && nmcli con up 'Wired connection 1'"
+      ]
+    },
+    {
+      "id": "serverb-connection-active",
+      "name": "Verify Wired connection 1 is active on serverb",
+      "description": "The modified connection should be active on ens4",
+      "points": 1,
+      "checks": [
+        {
+          "type": "command",
+          "host": "serverb",
+          "command": "nmcli con show --active | grep -E 'Wired connection 1.*ens4'",
+          "expected_exit_code": 0
+        }
+      ],
+      "success_message": "Wired connection 1 is active on serverb",
+      "failure_message": "Wired connection 1 is not active on serverb",
+      "hints": [
+        "Activate: nmcli con up 'Wired connection 1'"
+      ]
+    },
+    {
+      "id": "connectivity-test",
+      "name": "Verify connectivity via secondary network",
+      "description": "serverb should be able to ping servera on 10.0.1.1",
+      "points": 2,
+      "checks": [
+        {
+          "type": "command",
+          "host": "serverb",
+          "command": "ping -c1 -W2 10.0.1.1 >/dev/null 2>&1",
+          "expected_exit_code": 0
+        }
+      ],
+      "success_message": "serverb can ping servera (10.0.1.1)",
+      "failure_message": "serverb cannot ping servera on secondary network",
+      "hints": [
+        "Ensure both connections are active with secondary IPs",
+        "Test: ping -c3 10.0.1.1"
+      ]
+    }
+  ]
+}

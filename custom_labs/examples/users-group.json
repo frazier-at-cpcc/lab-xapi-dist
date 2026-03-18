@@ -1,0 +1,169 @@
+{
+  "version": "1.0",
+  "metadata": {
+    "slug": "users-group",
+    "name": "Manage Local Group Accounts",
+    "description": "Create, modify, and delete local group accounts",
+    "course": "rh124",
+    "chapter": "Chapter 5",
+    "estimated_time": "20 minutes",
+    "objectives": [
+      "Create supplementary groups with groupadd",
+      "Add users to groups with usermod -aG",
+      "Configure Sudo access for a group"
+    ],
+    "prerequisites": [
+      "Access to servera machine",
+      "operator1, operator2, operator3 users exist",
+      "sysadmin1, sysadmin2, sysadmin3 users exist"
+    ],
+    "tags": ["groups", "groupadd", "usermod", "sudo", "supplementary"]
+  },
+  "environment": {
+    "hosts": [
+      {
+        "name": "servera",
+        "description": "Server for group management practice",
+        "ssh_user": "student"
+      }
+    ],
+    "variables": {
+      "OPERATORS_GID": "30000"
+    }
+  },
+  "tasks": [
+    {
+      "id": "operators-group",
+      "name": "Verify operators group exists with GID 30000",
+      "description": "The operators group should exist with GID 30000",
+      "points": 1,
+      "checks": [
+        {
+          "type": "group_exists",
+          "host": "servera",
+          "group": "operators"
+        },
+        {
+          "type": "command",
+          "host": "servera",
+          "command": "getent group operators | grep -q ':30000:'",
+          "expected_exit_code": 0
+        }
+      ],
+      "success_message": "operators group exists with GID 30000",
+      "failure_message": "operators group missing or has wrong GID",
+      "hints": [
+        "Create group: sudo groupadd -g 30000 operators"
+      ]
+    },
+    {
+      "id": "admin-group",
+      "name": "Verify admin group exists",
+      "description": "The admin group should exist",
+      "points": 1,
+      "checks": [
+        {
+          "type": "group_exists",
+          "host": "servera",
+          "group": "admin"
+        }
+      ],
+      "success_message": "admin group exists",
+      "failure_message": "admin group not found",
+      "hints": [
+        "Create group: sudo groupadd admin"
+      ]
+    },
+    {
+      "id": "operators-members",
+      "name": "Verify operator users are in operators group",
+      "description": "operator1, operator2, operator3 should be members of operators group",
+      "points": 2,
+      "checks": [
+        {
+          "type": "user_in_group",
+          "host": "servera",
+          "username": "operator1",
+          "group": "operators"
+        },
+        {
+          "type": "user_in_group",
+          "host": "servera",
+          "username": "operator2",
+          "group": "operators"
+        },
+        {
+          "type": "user_in_group",
+          "host": "servera",
+          "username": "operator3",
+          "group": "operators"
+        }
+      ],
+      "success_message": "All operator users are in operators group",
+      "failure_message": "One or more operator users not in operators group",
+      "hints": [
+        "Add to group: sudo usermod -aG operators operator1",
+        "Repeat for operator2 and operator3"
+      ]
+    },
+    {
+      "id": "admin-members",
+      "name": "Verify sysadmin users are in admin group",
+      "description": "sysadmin1, sysadmin2, sysadmin3 should be members of admin group",
+      "points": 2,
+      "checks": [
+        {
+          "type": "user_in_group",
+          "host": "servera",
+          "username": "sysadmin1",
+          "group": "admin"
+        },
+        {
+          "type": "user_in_group",
+          "host": "servera",
+          "username": "sysadmin2",
+          "group": "admin"
+        },
+        {
+          "type": "user_in_group",
+          "host": "servera",
+          "username": "sysadmin3",
+          "group": "admin"
+        }
+      ],
+      "success_message": "All sysadmin users are in admin group",
+      "failure_message": "One or more sysadmin users not in admin group",
+      "hints": [
+        "Add to group: sudo usermod -aG admin sysadmin1",
+        "Repeat for sysadmin2 and sysadmin3"
+      ]
+    },
+    {
+      "id": "admin-sudoers",
+      "name": "Verify admin group has sudo privileges",
+      "description": "/etc/sudoers.d/admin should grant sudo to %admin",
+      "points": 2,
+      "checks": [
+        {
+          "type": "file_exists",
+          "host": "servera",
+          "path": "/etc/sudoers.d/admin",
+          "user": "root"
+        },
+        {
+          "type": "command",
+          "host": "servera",
+          "user": "root",
+          "command": "grep -q '%admin.*ALL=(ALL).*ALL' /etc/sudoers.d/admin",
+          "expected_exit_code": 0
+        }
+      ],
+      "success_message": "admin group has full sudo privileges",
+      "failure_message": "admin sudoers configuration missing or incorrect",
+      "hints": [
+        "Create file: echo '%admin ALL=(ALL) ALL' | sudo tee /etc/sudoers.d/admin",
+        "Set permissions: sudo chmod 0440 /etc/sudoers.d/admin"
+      ]
+    }
+  ]
+}

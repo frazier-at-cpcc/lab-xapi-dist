@@ -1,0 +1,226 @@
+{
+  "version": "1.0",
+  "metadata": {
+    "slug": "selinux-filecontexts",
+    "name": "Control SELinux File Contexts",
+    "description": "Configure the Apache HTTP server to publish web content from a nonstandard document root",
+    "course": "rh134",
+    "chapter": "Chapter 6",
+    "estimated_time": "25 minutes",
+    "objectives": [
+      "Configure the Apache HTTP server to publish web content from a nonstandard document root"
+    ],
+    "prerequisites": [
+      "Access to servera machine",
+      "Root access via sudo",
+      "Basic understanding of SELinux contexts"
+    ],
+    "tags": [
+      "selinux",
+      "httpd",
+      "apache",
+      "fcontext",
+      "semanage",
+      "restorecon",
+      "httpd_sys_content_t"
+    ]
+  },
+  "environment": {
+    "hosts": [
+      {
+        "name": "servera",
+        "description": "Web server with custom document root",
+        "ssh_user": "root"
+      }
+    ],
+    "variables": {}
+  },
+  "tasks": [
+    {
+      "id": "custom-directory-exists",
+      "name": "Verify /custom directory exists",
+      "description": "The /custom directory should exist as the nonstandard document root",
+      "points": 1,
+      "fatal": true,
+      "checks": [
+        {
+          "type": "directory_exists",
+          "host": "servera",
+          "path": "/custom"
+        }
+      ],
+      "success_message": "/custom directory exists",
+      "failure_message": "/custom directory does not exist",
+      "hints": [
+        "Create the directory: sudo mkdir /custom"
+      ]
+    },
+    {
+      "id": "index-html-exists",
+      "name": "Verify /custom/index.html exists with correct content",
+      "description": "The index.html file should exist with 'This is SERVERA.' content",
+      "points": 2,
+      "fatal": false,
+      "checks": [
+        {
+          "type": "file_exists",
+          "host": "servera",
+          "path": "/custom/index.html"
+        },
+        {
+          "type": "file_contains",
+          "host": "servera",
+          "path": "/custom/index.html",
+          "pattern": "This is SERVERA"
+        }
+      ],
+      "success_message": "index.html exists with correct content",
+      "failure_message": "index.html is missing or has incorrect content",
+      "hints": [
+        "Create the file: echo 'This is SERVERA.' | sudo tee /custom/index.html"
+      ]
+    },
+    {
+      "id": "httpd-config-custom",
+      "name": "Verify Apache is configured to use /custom directory",
+      "description": "The httpd.conf should reference /custom as the document root",
+      "points": 2,
+      "fatal": false,
+      "checks": [
+        {
+          "type": "file_contains",
+          "host": "servera",
+          "path": "/etc/httpd/conf/httpd.conf",
+          "pattern": "DocumentRoot.*/custom"
+        }
+      ],
+      "success_message": "Apache is configured to use /custom directory",
+      "failure_message": "Apache is not configured to use /custom directory",
+      "hints": [
+        "Edit /etc/httpd/conf/httpd.conf and replace /var/www/html with /custom",
+        "Use: sudo vim /etc/httpd/conf/httpd.conf"
+      ]
+    },
+    {
+      "id": "httpd-running",
+      "name": "Verify httpd service is running",
+      "description": "The Apache web service should be running",
+      "points": 1,
+      "fatal": false,
+      "checks": [
+        {
+          "type": "service_running",
+          "host": "servera",
+          "service": "httpd"
+        }
+      ],
+      "success_message": "httpd service is running",
+      "failure_message": "httpd service is not running",
+      "hints": [
+        "Start httpd: sudo systemctl start httpd"
+      ]
+    },
+    {
+      "id": "httpd-enabled",
+      "name": "Verify httpd service is enabled",
+      "description": "The Apache web service should be enabled at boot",
+      "points": 1,
+      "fatal": false,
+      "checks": [
+        {
+          "type": "service_enabled",
+          "host": "servera",
+          "service": "httpd"
+        }
+      ],
+      "success_message": "httpd service is enabled",
+      "failure_message": "httpd service is not enabled",
+      "hints": [
+        "Enable httpd: sudo systemctl enable httpd",
+        "Or use: sudo systemctl enable --now httpd"
+      ]
+    },
+    {
+      "id": "selinux-fcontext-rule",
+      "name": "Verify SELinux file context rule for /custom",
+      "description": "An SELinux file context rule should exist for /custom with httpd_sys_content_t",
+      "points": 2,
+      "fatal": false,
+      "checks": [
+        {
+          "type": "command",
+          "host": "servera",
+          "command": "semanage fcontext -l | grep -E '/custom.*httpd_sys_content_t'",
+          "expected_exit_code": 0
+        }
+      ],
+      "success_message": "SELinux file context rule is configured for /custom",
+      "failure_message": "SELinux file context rule is missing for /custom",
+      "hints": [
+        "Add the rule: sudo semanage fcontext -a -t httpd_sys_content_t '/custom(/.*)?'"
+      ]
+    },
+    {
+      "id": "custom-selinux-context",
+      "name": "Verify /custom has httpd_sys_content_t context",
+      "description": "The /custom directory should have the httpd_sys_content_t SELinux context applied",
+      "points": 2,
+      "fatal": false,
+      "checks": [
+        {
+          "type": "selinux_context",
+          "host": "servera",
+          "path": "/custom",
+          "context": "httpd_sys_content_t"
+        }
+      ],
+      "success_message": "/custom has correct SELinux context",
+      "failure_message": "/custom does not have httpd_sys_content_t context",
+      "hints": [
+        "Apply the context: sudo restorecon -Rv /custom"
+      ]
+    },
+    {
+      "id": "index-html-selinux-context",
+      "name": "Verify /custom/index.html has httpd_sys_content_t context",
+      "description": "The index.html file should have the httpd_sys_content_t SELinux context",
+      "points": 2,
+      "fatal": false,
+      "checks": [
+        {
+          "type": "selinux_context",
+          "host": "servera",
+          "path": "/custom/index.html",
+          "context": "httpd_sys_content_t"
+        }
+      ],
+      "success_message": "index.html has correct SELinux context",
+      "failure_message": "index.html does not have httpd_sys_content_t context",
+      "hints": [
+        "Apply the context: sudo restorecon -Rv /custom"
+      ]
+    },
+    {
+      "id": "web-content-accessible",
+      "name": "Verify web content is accessible via HTTP",
+      "description": "The web page at http://servera/index.html should return the expected content",
+      "points": 3,
+      "fatal": false,
+      "checks": [
+        {
+          "type": "command",
+          "host": "servera",
+          "command": "curl -s http://localhost/index.html | grep -q 'This is SERVERA'",
+          "expected_exit_code": 0
+        }
+      ],
+      "success_message": "Web content is accessible",
+      "failure_message": "Web content is not accessible - check httpd status and SELinux contexts",
+      "hints": [
+        "Check httpd status: sudo systemctl status httpd",
+        "Check SELinux contexts: ls -ldZ /custom /custom/index.html",
+        "Test locally: curl http://localhost/index.html"
+      ]
+    }
+  ]
+}

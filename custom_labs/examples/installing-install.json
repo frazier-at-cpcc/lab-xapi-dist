@@ -1,0 +1,238 @@
+{
+  "version": "1.0",
+  "metadata": {
+    "slug": "installing-install",
+    "name": "Install Red Hat Enterprise Linux Interactively",
+    "description": "Manually install Red Hat Enterprise Linux 10 using the graphical installer",
+    "course": "rh134",
+    "chapter": "Chapter 16",
+    "estimated_time": "45 minutes",
+    "objectives": [
+      "Manually install Red Hat Enterprise Linux 10"
+    ],
+    "prerequisites": [
+      "Access to serverc console",
+      "PXE boot environment configured"
+    ],
+    "tags": ["installation", "anaconda", "partitioning", "networking", "users", "rhel10"]
+  },
+  "environment": {
+    "hosts": [
+      {
+        "name": "serverc",
+        "description": "Target machine for RHEL installation",
+        "ssh_user": "student"
+      }
+    ],
+    "variables": {}
+  },
+  "tasks": [
+    {
+      "id": "student-user-exists",
+      "name": "Verify student user exists",
+      "description": "The student user should exist on the newly installed system",
+      "points": 2,
+      "fatal": true,
+      "checks": [
+        {
+          "type": "user_exists",
+          "host": "serverc",
+          "username": "student"
+        }
+      ],
+      "success_message": "Student user exists on serverc",
+      "failure_message": "Student user does not exist on serverc",
+      "hints": [
+        "During installation, create the student user in User Creation",
+        "Ensure the user was created before clicking Begin Installation"
+      ]
+    },
+    {
+      "id": "student-admin-privileges",
+      "name": "Verify student has administrative privileges",
+      "description": "The student user should be in the wheel group for sudo access",
+      "points": 2,
+      "fatal": false,
+      "checks": [
+        {
+          "type": "user_in_group",
+          "host": "serverc",
+          "username": "student",
+          "group": "wheel"
+        }
+      ],
+      "success_message": "Student user has administrative privileges (wheel group)",
+      "failure_message": "Student user is not in the wheel group",
+      "hints": [
+        "During installation, check 'Add administrative privileges' for the student user",
+        "Verify with: id student"
+      ]
+    },
+    {
+      "id": "root-account-enabled",
+      "name": "Verify root account is enabled",
+      "description": "The root account should be enabled (not locked)",
+      "points": 2,
+      "fatal": false,
+      "checks": [
+        {
+          "type": "command",
+          "host": "serverc",
+          "command": "sudo grep '^root:' /etc/shadow | grep -v ':!:' | grep -v ':\\*:'",
+          "expected_exit_code": 0
+        }
+      ],
+      "success_message": "Root account is enabled",
+      "failure_message": "Root account is locked or disabled",
+      "hints": [
+        "During installation, enable the root account in Root Account settings",
+        "Set a root password (redhat) during installation"
+      ]
+    },
+    {
+      "id": "hostname-configured",
+      "name": "Verify hostname is serverc.lab.example.com",
+      "description": "The system hostname should be set to serverc.lab.example.com",
+      "points": 2,
+      "fatal": false,
+      "checks": [
+        {
+          "type": "command",
+          "host": "serverc",
+          "command": "hostname | grep -q 'serverc.lab.example.com'",
+          "expected_exit_code": 0
+        }
+      ],
+      "success_message": "Hostname is correctly set to serverc.lab.example.com",
+      "failure_message": "Hostname is not serverc.lab.example.com",
+      "hints": [
+        "Configure hostname in Network & Host Name during installation",
+        "Check with: hostname"
+      ]
+    },
+    {
+      "id": "static-ip-configured",
+      "name": "Verify static IP address 172.25.250.12",
+      "description": "The network interface should have static IP 172.25.250.12",
+      "points": 2,
+      "fatal": false,
+      "checks": [
+        {
+          "type": "command",
+          "host": "serverc",
+          "command": "ip addr show | grep -q '172.25.250.12'",
+          "expected_exit_code": 0
+        }
+      ],
+      "success_message": "Static IP 172.25.250.12 is configured",
+      "failure_message": "IP address 172.25.250.12 is not configured",
+      "hints": [
+        "Configure static IP in Network & Host Name during installation",
+        "Set Method to Manual and add the IP address 172.25.250.12"
+      ]
+    },
+    {
+      "id": "dns-configured",
+      "name": "Verify DNS server configuration",
+      "description": "DNS should be configured to use 172.25.250.220",
+      "points": 1,
+      "fatal": false,
+      "checks": [
+        {
+          "type": "file_contains",
+          "host": "serverc",
+          "path": "/etc/resolv.conf",
+          "pattern": "nameserver\\s+172\\.25\\.250\\.220"
+        }
+      ],
+      "success_message": "DNS server 172.25.250.220 is configured",
+      "failure_message": "DNS server is not configured correctly",
+      "hints": [
+        "Configure DNS in Network & Host Name > Configure > IPv4 Settings",
+        "Set DNS servers to 172.25.250.220"
+      ]
+    },
+    {
+      "id": "gateway-configured",
+      "name": "Verify default gateway configuration",
+      "description": "Default gateway should be 172.25.250.254",
+      "points": 1,
+      "fatal": false,
+      "checks": [
+        {
+          "type": "command",
+          "host": "serverc",
+          "command": "ip route show | grep -q 'default via 172.25.250.254'",
+          "expected_exit_code": 0
+        }
+      ],
+      "success_message": "Default gateway 172.25.250.254 is configured",
+      "failure_message": "Default gateway is not configured correctly",
+      "hints": [
+        "Configure gateway in Network & Host Name > Configure > IPv4 Settings",
+        "Set gateway to 172.25.250.254"
+      ]
+    },
+    {
+      "id": "boot-partition-exists",
+      "name": "Verify /boot partition exists",
+      "description": "A separate /boot partition should exist",
+      "points": 1,
+      "fatal": false,
+      "checks": [
+        {
+          "type": "mount_exists",
+          "host": "serverc",
+          "mountpoint": "/boot"
+        }
+      ],
+      "success_message": "/boot partition exists and is mounted",
+      "failure_message": "/boot partition is not found",
+      "hints": [
+        "Standard partitioning should create a /boot partition automatically",
+        "Check with: lsblk or df -h"
+      ]
+    },
+    {
+      "id": "root-partition-exists",
+      "name": "Verify root filesystem is mounted",
+      "description": "The root filesystem should be mounted at /",
+      "points": 1,
+      "fatal": false,
+      "checks": [
+        {
+          "type": "mount_exists",
+          "host": "serverc",
+          "mountpoint": "/"
+        }
+      ],
+      "success_message": "Root filesystem is mounted",
+      "failure_message": "Root filesystem mount issue detected",
+      "hints": [
+        "The root partition should be created during installation",
+        "Check with: df -h /"
+      ]
+    },
+    {
+      "id": "swap-enabled",
+      "name": "Verify swap is enabled",
+      "description": "Swap space should be configured and active",
+      "points": 1,
+      "fatal": false,
+      "checks": [
+        {
+          "type": "command",
+          "host": "serverc",
+          "command": "swapon --show | grep -q 'partition\\|file'",
+          "expected_exit_code": 0
+        }
+      ],
+      "success_message": "Swap is enabled",
+      "failure_message": "Swap is not enabled",
+      "hints": [
+        "Standard partitioning should create a swap partition automatically",
+        "Check with: swapon --show"
+      ]
+    }
+  ]
+}

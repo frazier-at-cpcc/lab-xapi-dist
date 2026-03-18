@@ -1,0 +1,183 @@
+{
+  "version": "1.0",
+  "metadata": {
+    "slug": "scripts-write",
+    "name": "Write Simple Bash Scripts",
+    "description": "Write and execute a simple Bash script and redirect output to a file",
+    "course": "rh134",
+    "chapter": "Chapter 1",
+    "estimated_time": "20 minutes",
+    "objectives": [
+      "Write and execute a simple Bash script",
+      "Redirect the output of a simple Bash script to a file"
+    ],
+    "prerequisites": [
+      "Access to servera machine",
+      "SSH access as student user"
+    ],
+    "tags": ["bash", "script", "scripting", "shebang", "chmod", "redirect", "output"]
+  },
+  "environment": {
+    "hosts": [
+      {
+        "name": "servera",
+        "description": "Server for Bash scripting practice",
+        "ssh_user": "student"
+      }
+    ],
+    "variables": {}
+  },
+  "tasks": [
+    {
+      "id": "firstscript-exists",
+      "name": "Verify firstscript.sh exists",
+      "description": "The firstscript.sh script should exist in the student home directory",
+      "points": 1,
+      "fatal": true,
+      "checks": [
+        {
+          "type": "file_exists",
+          "host": "servera",
+          "path": "/home/student/firstscript.sh"
+        }
+      ],
+      "success_message": "firstscript.sh exists in home directory",
+      "failure_message": "firstscript.sh not found in home directory",
+      "hints": [
+        "Create the script file: vim ~/firstscript.sh",
+        "The script should be in /home/student/firstscript.sh"
+      ]
+    },
+    {
+      "id": "firstscript-shebang",
+      "name": "Verify firstscript.sh has proper shebang",
+      "description": "The script should start with #!/usr/bin/bash",
+      "points": 1,
+      "fatal": false,
+      "checks": [
+        {
+          "type": "file_contains",
+          "host": "servera",
+          "path": "/home/student/firstscript.sh",
+          "pattern": "^#!/usr/bin/bash"
+        }
+      ],
+      "success_message": "Script has correct shebang line",
+      "failure_message": "Script is missing proper shebang (#!/usr/bin/bash)",
+      "hints": [
+        "The first line of the script should be: #!/usr/bin/bash",
+        "This tells the system which interpreter to use"
+      ]
+    },
+    {
+      "id": "firstscript-executable",
+      "name": "Verify firstscript.sh is executable",
+      "description": "The script should have execute permissions",
+      "points": 1,
+      "fatal": false,
+      "checks": [
+        {
+          "type": "command",
+          "host": "servera",
+          "command": "test -x /home/student/firstscript.sh",
+          "expected_exit_code": 0
+        }
+      ],
+      "success_message": "firstscript.sh has execute permissions",
+      "failure_message": "firstscript.sh is not executable",
+      "hints": [
+        "Make the script executable: chmod +x ~/firstscript.sh",
+        "Verify with: ls -l ~/firstscript.sh"
+      ]
+    },
+    {
+      "id": "firstscript-lsblk",
+      "name": "Verify script includes lsblk command",
+      "description": "The script should contain the lsblk command to list block devices",
+      "points": 1,
+      "fatal": false,
+      "checks": [
+        {
+          "type": "file_contains",
+          "host": "servera",
+          "path": "/home/student/firstscript.sh",
+          "pattern": "lsblk"
+        }
+      ],
+      "success_message": "Script contains lsblk command",
+      "failure_message": "Script does not contain lsblk command",
+      "hints": [
+        "Add the lsblk command to your script",
+        "Example: lsblk >> ~/output.txt"
+      ]
+    },
+    {
+      "id": "firstscript-df",
+      "name": "Verify script includes df command",
+      "description": "The script should contain the df -h command for filesystem status",
+      "points": 1,
+      "fatal": false,
+      "checks": [
+        {
+          "type": "file_contains",
+          "host": "servera",
+          "path": "/home/student/firstscript.sh",
+          "pattern": "df.*-h"
+        }
+      ],
+      "success_message": "Script contains df -h command",
+      "failure_message": "Script does not contain df -h command",
+      "hints": [
+        "Add the df -h command to your script",
+        "Example: df -h >> ~/output.txt"
+      ]
+    },
+    {
+      "id": "output-file-exists",
+      "name": "Verify output.txt was created",
+      "description": "The script should have created an output.txt file",
+      "points": 1,
+      "fatal": false,
+      "checks": [
+        {
+          "type": "file_exists",
+          "host": "servera",
+          "path": "/home/student/output.txt"
+        }
+      ],
+      "success_message": "output.txt file exists",
+      "failure_message": "output.txt file not found - run the script",
+      "hints": [
+        "Execute the script: ./firstscript.sh",
+        "The script should create ~/output.txt"
+      ]
+    },
+    {
+      "id": "output-file-content",
+      "name": "Verify output.txt contains expected content",
+      "description": "The output file should contain script output including block device info",
+      "points": 2,
+      "fatal": false,
+      "checks": [
+        {
+          "type": "file_contains",
+          "host": "servera",
+          "path": "/home/student/output.txt",
+          "pattern": "This is my first bash script"
+        },
+        {
+          "type": "file_contains",
+          "host": "servera",
+          "path": "/home/student/output.txt",
+          "pattern": "LIST BLOCK DEVICES"
+        }
+      ],
+      "success_message": "output.txt contains expected content",
+      "failure_message": "output.txt does not contain expected content",
+      "hints": [
+        "Make sure your script echoes 'This is my first bash script'",
+        "Run the script again: ./firstscript.sh"
+      ]
+    }
+  ]
+}

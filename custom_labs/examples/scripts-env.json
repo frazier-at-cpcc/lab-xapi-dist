@@ -1,0 +1,81 @@
+{
+  "version": "1.0",
+  "metadata": {
+    "slug": "scripts-env",
+    "name": "Change the Shell Environment",
+    "description": "Edit a user profile, create shell variables, and create environment variables",
+    "course": "rh134",
+    "chapter": "Chapter 1",
+    "estimated_time": "15 minutes",
+    "objectives": [
+      "Edit a user profile",
+      "Create a shell variable",
+      "Create an environment variable"
+    ],
+    "prerequisites": [
+      "Access to servera machine",
+      "SSH access as student user"
+    ],
+    "tags": ["shell", "environment", "variables", "bashrc", "PS1", "export", "EDITOR"]
+  },
+  "environment": {
+    "hosts": [
+      {
+        "name": "servera",
+        "description": "Server for shell environment practice",
+        "ssh_user": "student"
+      }
+    ],
+    "variables": {}
+  },
+  "tasks": [
+    {
+      "id": "bashrc-ps1-configured",
+      "name": "Verify PS1 variable is set in ~/.bashrc",
+      "description": "The ~/.bashrc file should contain a PS1 variable setting with time format",
+      "points": 2,
+      "fatal": false,
+      "checks": [
+        {
+          "type": "file_exists",
+          "host": "servera",
+          "path": "/home/student/.bashrc"
+        },
+        {
+          "type": "file_contains",
+          "host": "servera",
+          "path": "/home/student/.bashrc",
+          "pattern": "PS1=.*\\\\t"
+        }
+      ],
+      "success_message": "PS1 variable is correctly configured in ~/.bashrc with time format",
+      "failure_message": "PS1 variable is not configured correctly in ~/.bashrc",
+      "hints": [
+        "Edit ~/.bashrc and add: PS1='[\\u@\\h \\t \\w]$ '",
+        "The \\t escape sequence displays the current time",
+        "Remember to source ~/.bashrc after editing to apply changes"
+      ]
+    },
+    {
+      "id": "examplefile-removed",
+      "name": "Verify examplefile has been deleted",
+      "description": "The examplefile should have been deleted using a shell variable",
+      "points": 1,
+      "fatal": false,
+      "checks": [
+        {
+          "type": "file_absent",
+          "host": "servera",
+          "path": "/home/student/examplefile"
+        }
+      ],
+      "success_message": "The examplefile has been successfully removed",
+      "failure_message": "The examplefile still exists in the home directory",
+      "hints": [
+        "Set a variable: file=examplefile",
+        "Delete the file using the variable: rm $file",
+        "Verify deletion: ls -l $file"
+      ]
+    }
+  ]
+}

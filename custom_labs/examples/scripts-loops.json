@@ -1,0 +1,215 @@
+{
+  "version": "1.0",
+  "metadata": {
+    "slug": "scripts-loops",
+    "name": "Run Loops and Conditional Commands",
+    "description": "Create for loops to iterate through items and use if/then/else statements for conditional execution",
+    "course": "rh134",
+    "chapter": "Chapter 1",
+    "estimated_time": "25 minutes",
+    "objectives": [
+      "Create a for loop to iterate through a list of items from the command line and in a shell script",
+      "Create an if/then/else statement that executes different commands based on a condition being true or false"
+    ],
+    "prerequisites": [
+      "Access to workstation, servera, and serverb machines",
+      "SSH access as student user"
+    ],
+    "tags": ["bash", "script", "for loop", "if", "then", "else", "conditional", "iteration"]
+  },
+  "environment": {
+    "hosts": [
+      {
+        "name": "workstation",
+        "description": "Workstation for running scripts",
+        "ssh_user": "student"
+      },
+      {
+        "name": "servera",
+        "description": "Target server for hostname verification",
+        "ssh_user": "student"
+      },
+      {
+        "name": "serverb",
+        "description": "Target server for hostname verification",
+        "ssh_user": "student"
+      }
+    ],
+    "variables": {}
+  },
+  "tasks": [
+    {
+      "id": "bin-directory-exists",
+      "name": "Verify ~/bin directory exists",
+      "description": "The bin subdirectory should exist in the student home directory",
+      "points": 1,
+      "fatal": true,
+      "checks": [
+        {
+          "type": "directory_exists",
+          "host": "workstation",
+          "path": "/home/student/bin"
+        }
+      ],
+      "success_message": "~/bin directory exists",
+      "failure_message": "~/bin directory not found",
+      "hints": [
+        "Create the directory: mkdir ~/bin",
+        "This directory should be in your PATH automatically"
+      ]
+    },
+    {
+      "id": "printhostname-exists",
+      "name": "Verify printhostname.sh script exists",
+      "description": "The printhostname.sh script should exist in ~/bin",
+      "points": 1,
+      "fatal": true,
+      "checks": [
+        {
+          "type": "file_exists",
+          "host": "workstation",
+          "path": "/home/student/bin/printhostname.sh"
+        }
+      ],
+      "success_message": "printhostname.sh script exists",
+      "failure_message": "printhostname.sh script not found in ~/bin",
+      "hints": [
+        "Create the script: vim ~/bin/printhostname.sh",
+        "The script should be in /home/student/bin/"
+      ]
+    },
+    {
+      "id": "printhostname-shebang",
+      "name": "Verify script has proper shebang",
+      "description": "The script should start with #!/usr/bin/bash",
+      "points": 1,
+      "fatal": false,
+      "checks": [
+        {
+          "type": "file_contains",
+          "host": "workstation",
+          "path": "/home/student/bin/printhostname.sh",
+          "pattern": "^#!/usr/bin/bash"
+        }
+      ],
+      "success_message": "Script has correct shebang line",
+      "failure_message": "Script is missing proper shebang (#!/usr/bin/bash)",
+      "hints": [
+        "The first line of the script should be: #!/usr/bin/bash"
+      ]
+    },
+    {
+      "id": "printhostname-executable",
+      "name": "Verify script is executable",
+      "description": "The printhostname.sh script should have execute permissions",
+      "points": 1,
+      "fatal": false,
+      "checks": [
+        {
+          "type": "command",
+          "host": "workstation",
+          "command": "test -x /home/student/bin/printhostname.sh",
+          "expected_exit_code": 0
+        }
+      ],
+      "success_message": "printhostname.sh is executable",
+      "failure_message": "printhostname.sh is not executable",
+      "hints": [
+        "Make the script executable: chmod +x ~/bin/printhostname.sh",
+        "Verify with: ls -l ~/bin/printhostname.sh"
+      ]
+    },
+    {
+      "id": "printhostname-for-loop",
+      "name": "Verify script contains for loop",
+      "description": "The script should contain a for loop iterating over servera and serverb",
+      "points": 2,
+      "fatal": false,
+      "checks": [
+        {
+          "type": "file_contains",
+          "host": "workstation",
+          "path": "/home/student/bin/printhostname.sh",
+          "pattern": "for.*in.*servera.*serverb"
+        }
+      ],
+      "success_message": "Script contains for loop with servera and serverb",
+      "failure_message": "Script does not contain proper for loop",
+      "hints": [
+        "Use: for host in servera serverb; do ... done",
+        "The loop should iterate over both servera and serverb"
+      ]
+    },
+    {
+      "id": "printhostname-hostname-command",
+      "name": "Verify script runs hostname command via SSH",
+      "description": "The script should SSH to hosts and run the hostname command",
+      "points": 1,
+      "fatal": false,
+      "checks": [
+        {
+          "type": "file_contains",
+          "host": "workstation",
+          "path": "/home/student/bin/printhostname.sh",
+          "pattern": "ssh.*hostname"
+        }
+      ],
+      "success_message": "Script uses SSH to run hostname command",
+      "failure_message": "Script does not use SSH to run hostname",
+      "hints": [
+        "Use: ssh student@${host} hostname",
+        "This runs the hostname command on the remote server"
+      ]
+    },
+    {
+      "id": "printhostname-if-statement",
+      "name": "Verify script contains if/then/else statement",
+      "description": "The script should contain conditional logic to check for servera",
+      "points": 2,
+      "fatal": false,
+      "checks": [
+        {
+          "type": "file_contains",
+          "host": "workstation",
+          "path": "/home/student/bin/printhostname.sh",
+          "pattern": "if.*\\[\\[.*servera"
+        },
+        {
+          "type": "file_contains",
+          "host": "workstation",
+          "path": "/home/student/bin/printhostname.sh",
+          "pattern": "else"
+        }
+      ],
+      "success_message": "Script contains if/then/else conditional",
+      "failure_message": "Script does not contain proper if/then/else statement",
+      "hints": [
+        "Use: if [[ \"${host}\" == \"servera\" ]]; then ... else ... fi",
+        "Check if the host variable equals 'servera'"
+      ]
+    },
+    {
+      "id": "printhostname-runs-successfully",
+      "name": "Verify script executes successfully",
+      "description": "Running the script should complete with exit code 0",
+      "points": 2,
+      "fatal": false,
+      "checks": [
+        {
+          "type": "command",
+          "host": "workstation",
+          "command": "/home/student/bin/printhostname.sh",
+          "expected_exit_code": 0,
+          "timeout": 30
+        }
+      ],
+      "success_message": "Script executes successfully with exit code 0",
+      "failure_message": "Script did not execute successfully",
+      "hints": [
+        "Run the script directly: printhostname.sh",
+        "Check for syntax errors in your script",
+        "Verify SSH connectivity to servera and serverb"
+      ]
+    }
+  ]
+}

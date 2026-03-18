@@ -1,0 +1,170 @@
+{
+  "version": "1.0",
+  "metadata": {
+    "slug": "storage-partitions",
+    "name": "Create and Manage File Systems on Standard Partitions",
+    "description": "Create a partition using the MBR partition scheme, format it with XFS, and persistently mount it",
+    "course": "rh134",
+    "chapter": "Chapter 10",
+    "estimated_time": "25 minutes",
+    "objectives": [
+      "Create a partition by using the MBR partition scheme",
+      "Format the partition with the XFS file system",
+      "Persistently mount the file system"
+    ],
+    "prerequisites": [
+      "Basic Linux command-line skills",
+      "Understanding of disk partitioning concepts"
+    ],
+    "tags": [
+      "partitions",
+      "parted",
+      "xfs",
+      "mkfs",
+      "fstab",
+      "mount",
+      "storage",
+      "msdos"
+    ]
+  },
+  "environment": {
+    "hosts": [
+      {
+        "name": "servera",
+        "description": "Target server for partition and file system management",
+        "ssh_user": "root"
+      }
+    ],
+    "variables": {}
+  },
+  "tasks": [
+    {
+      "id": "sdb-partition-table",
+      "name": "Verify MBR partition table on /dev/sdb",
+      "description": "The /dev/sdb disk should have an msdos (MBR) partition table",
+      "points": 2,
+      "fatal": true,
+      "checks": [
+        {
+          "type": "command",
+          "host": "servera",
+          "command": "parted /dev/sdb print | grep -i 'Partition Table'",
+          "expected_stdout": "msdos"
+        }
+      ],
+      "success_message": "MBR partition table is configured on /dev/sdb",
+      "failure_message": "MBR partition table is not configured on /dev/sdb",
+      "hints": [
+        "Create MBR partition table with: sudo parted /dev/sdb mklabel msdos",
+        "Verify with: sudo parted /dev/sdb print"
+      ]
+    },
+    {
+      "id": "sdb1-partition-exists",
+      "name": "Verify /dev/sdb1 partition exists",
+      "description": "A primary partition /dev/sdb1 should exist on the disk",
+      "points": 2,
+      "fatal": true,
+      "checks": [
+        {
+          "type": "command",
+          "host": "servera",
+          "command": "lsblk /dev/sdb1",
+          "expected_exit_code": 0
+        }
+      ],
+      "success_message": "Partition /dev/sdb1 exists",
+      "failure_message": "Partition /dev/sdb1 does not exist",
+      "hints": [
+        "Create partition with parted: sudo parted /dev/sdb mkpart primary xfs 2048s 1001MB",
+        "Register with: sudo udevadm settle",
+        "Verify with: lsblk /dev/sdb"
+      ]
+    },
+    {
+      "id": "sdb1-xfs-filesystem",
+      "name": "Verify XFS filesystem on /dev/sdb1",
+      "description": "The /dev/sdb1 partition should be formatted with XFS",
+      "points": 2,
+      "fatal": false,
+      "checks": [
+        {
+          "type": "command",
+          "host": "servera",
+          "command": "lsblk -f /dev/sdb1 | grep -i xfs",
+          "expected_exit_code": 0
+        }
+      ],
+      "success_message": "XFS filesystem is on /dev/sdb1",
+      "failure_message": "XFS filesystem is not on /dev/sdb1",
+      "hints": [
+        "Format with: sudo mkfs.xfs /dev/sdb1",
+        "If already formatted, you may need to use -f flag to force",
+        "Verify with: lsblk -f /dev/sdb1"
+      ]
+    },
+    {
+      "id": "archive-directory-exists",
+      "name": "Verify /archive directory exists",
+      "description": "The /archive mount point directory should exist",
+      "points": 1,
+      "fatal": false,
+      "checks": [
+        {
+          "type": "directory_exists",
+          "host": "servera",
+          "path": "/archive"
+        }
+      ],
+      "success_message": "Directory /archive exists",
+      "failure_message": "Directory /archive does not exist",
+      "hints": [
+        "Create with: sudo mkdir /archive"
+      ]
+    },
+    {
+      "id": "fstab-entry-exists",
+      "name": "Verify /etc/fstab entry for /archive",
+      "description": "An entry for /archive mount point should exist in /etc/fstab",
+      "points": 2,
+      "fatal": false,
+      "checks": [
+        {
+          "type": "file_contains",
+          "host": "servera",
+          "path": "/etc/fstab",
+          "pattern": "/archive.*xfs.*defaults"
+        }
+      ],
+      "success_message": "fstab entry for /archive exists",
+      "failure_message": "fstab entry for /archive is missing or incorrect",
+      "hints": [
+        "Get UUID with: lsblk --fs /dev/sdb1",
+        "Add to /etc/fstab: UUID=<your-uuid> /archive xfs defaults 0 0",
+        "Run: sudo systemctl daemon-reload after editing fstab"
+      ]
+    },
+    {
+      "id": "archive-mounted",
+      "name": "Verify /archive is mounted",
+      "description": "The /archive directory should have the filesystem mounted",
+      "points": 2,
+      "fatal": false,
+      "checks": [
+        {
+          "type": "mount_exists",
+          "host": "servera",
+          "mountpoint": "/archive",
+          "fstype": "xfs"
+        }
+      ],
+      "success_message": "Filesystem is mounted on /archive",
+      "failure_message": "Filesystem is not mounted on /archive",
+      "hints": [
+        "Mount with: sudo mount /archive",
+        "Or mount all fstab entries: sudo mount -a",
+        "Verify with: mount | grep /archive"
+      ]
+    }
+  ]
+}

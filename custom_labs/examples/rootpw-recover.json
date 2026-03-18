@@ -1,0 +1,156 @@
+{
+  "version": "1.0",
+  "metadata": {
+    "slug": "rootpw-recover",
+    "name": "Regain Superuser Access and Reset the Root Password",
+    "description": "Gain administrative access to a system when the superuser password is unknown or is locked",
+    "course": "rh134",
+    "chapter": "Chapter 13",
+    "estimated_time": "25 minutes",
+    "objectives": [
+      "Reset the root user's password"
+    ],
+    "prerequisites": [
+      "Understanding of the Linux boot process",
+      "Familiarity with GRUB2 boot loader",
+      "Knowledge of SELinux relabeling"
+    ],
+    "tags": [
+      "root-password",
+      "password-recovery",
+      "selinux",
+      "autorelabel",
+      "init",
+      "boot-recovery"
+    ]
+  },
+  "environment": {
+    "hosts": [
+      {
+        "name": "servera",
+        "description": "Target server requiring root password reset",
+        "ssh_user": "root"
+      }
+    ],
+    "variables": {}
+  },
+  "tasks": [
+    {
+      "id": "root-login-works",
+      "name": "Verify root password hash exists",
+      "description": "The root user should have a valid password hash in /etc/shadow",
+      "points": 3,
+      "fatal": false,
+      "checks": [
+        {
+          "type": "command",
+          "host": "servera",
+          "command": "grep '^root:\\$' /etc/shadow | grep -v '^root:!'",
+          "expected_exit_code": 0,
+          "description": "Check root has a password hash in /etc/shadow"
+        }
+      ],
+      "success_message": "Root password hash exists in /etc/shadow",
+      "failure_message": "Root password hash not found in /etc/shadow",
+      "hints": [
+        "Boot with init=/bin/bash appended to kernel command line",
+        "Remount root filesystem read-write: mount -o remount,rw /",
+        "Use passwd command to set password to 'redhat'",
+        "Create /.autorelabel file for SELinux relabeling",
+        "Reboot with exec /sbin/init"
+      ]
+    },
+    {
+      "id": "shadow-file-exists",
+      "name": "Verify /etc/shadow file exists",
+      "description": "The /etc/shadow file should exist and contain root password hash",
+      "points": 1,
+      "fatal": true,
+      "checks": [
+        {
+          "type": "file_exists",
+          "host": "servera",
+          "path": "/etc/shadow"
+        },
+        {
+          "type": "command",
+          "host": "servera",
+          "command": "grep '^root:' /etc/shadow | cut -d: -f2 | grep -v '^[!*]'",
+          "expected_exit_code": 0,
+          "description": "Check root has a valid password hash (not locked)"
+        }
+      ],
+      "success_message": "/etc/shadow exists with valid root password hash",
+      "failure_message": "/etc/shadow is missing or root account is locked",
+      "hints": [
+        "The /etc/shadow file should contain password hashes",
+        "Root's password field should not start with ! or *"
+      ]
+    },
+    {
+      "id": "selinux-context-correct",
+      "name": "Verify /etc/shadow has correct SELinux context",
+      "description": "The /etc/shadow file should have the proper SELinux context after relabeling",
+      "points": 2,
+      "fatal": false,
+      "checks": [
+        {
+          "type": "command",
+          "host": "servera",
+          "command": "ls -Z /etc/shadow | grep -E 'shadow_t'",
+          "expected_exit_code": 0,
+          "description": "Check /etc/shadow has appropriate SELinux context"
+        }
+      ],
+      "success_message": "/etc/shadow has correct SELinux context",
+      "failure_message": "/etc/shadow may have incorrect SELinux context",
+      "hints": [
+        "Create /.autorelabel file before rebooting to trigger SELinux relabeling",
+        "Alternatively, run 'restorecon /etc/shadow' manually"
+      ]
+    },
+    {
+      "id": "autorelabel-completed",
+      "name": "Verify autorelabel file is removed after reboot",
+      "description": "The /.autorelabel file should be removed after successful SELinux relabeling",
+      "points": 1,
+      "fatal": false,
+      "checks": [
+        {
+          "type": "file_absent",
+          "host": "servera",
+          "path": "/.autorelabel"
+        }
+      ],
+      "success_message": "SELinux autorelabel completed (/.autorelabel removed)",
+      "failure_message": "/.autorelabel file still exists - system may not have rebooted after relabeling",
+      "hints": [
+        "The /.autorelabel file is automatically removed after relabeling completes",
+        "If it still exists, the system may need to reboot again"
+      ]
+    },
+    {
+      "id": "root-account-unlocked",
+      "name": "Verify root account is not locked",
+      "description": "The root account should not be locked in /etc/shadow",
+      "points": 2,
+      "fatal": false,
+      "checks": [
+        {
+          "type": "command",
+          "host": "servera",
+          "command": "passwd -S root | awk '{print $2}'",
+          "expected_stdout": "^(PS|P)$",
+          "description": "Check root account password status is set (not locked)"
+        }
+      ],
+      "success_message": "Root account is unlocked and has a password set",
+      "failure_message": "Root account appears to be locked",
+      "hints": [
+        "Use 'passwd -S root' to check account status",
+        "PS or P means password is set, LK means locked",
+        "Use 'passwd root' to set a new password"
+      ]
+    }
+  ]
+}

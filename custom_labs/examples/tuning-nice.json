@@ -1,0 +1,117 @@
+{
+  "version": "1.0",
+  "metadata": {
+    "slug": "tuning-nice",
+    "name": "Influence Process Scheduling",
+    "description": "Adjust scheduling priorities for processes using nice and renice commands",
+    "course": "rh134",
+    "chapter": "Chapter 9",
+    "estimated_time": "20 minutes",
+    "objectives": [
+      "Adjust scheduling priorities for processes"
+    ],
+    "prerequisites": [
+      "Basic Linux command-line skills",
+      "Understanding of process management"
+    ],
+    "tags": ["nice", "renice", "process", "scheduling", "priority", "cpu"]
+  },
+  "environment": {
+    "hosts": [
+      {
+        "name": "servera",
+        "description": "Target server for process scheduling exercises",
+        "ssh_user": "student"
+      }
+    ],
+    "variables": {}
+  },
+  "tasks": [
+    {
+      "id": "no-sha1sum-processes",
+      "name": "Verify no sha1sum processes are running",
+      "description": "All sha1sum processes should be terminated at the end of the exercise",
+      "points": 2,
+      "fatal": false,
+      "checks": [
+        {
+          "type": "command",
+          "host": "servera",
+          "command": "pgrep -c sha1sum || echo 0",
+          "expected_stdout": "^0$"
+        }
+      ],
+      "success_message": "No sha1sum processes are running",
+      "failure_message": "sha1sum processes are still running",
+      "hints": [
+        "Terminate all sha1sum processes with: pkill sha1sum",
+        "Verify with: pgrep sha1sum or jobs command",
+        "You can also use: killall sha1sum"
+      ]
+    },
+    {
+      "id": "nproc-available",
+      "name": "Verify nproc command is available",
+      "description": "The nproc command should be available to determine CPU count",
+      "points": 1,
+      "fatal": false,
+      "checks": [
+        {
+          "type": "command",
+          "host": "servera",
+          "command": "which nproc",
+          "expected_exit_code": 0
+        }
+      ],
+      "success_message": "nproc command is available",
+      "failure_message": "nproc command is not found",
+      "hints": [
+        "nproc is typically part of coreutils package",
+        "Check with: which nproc",
+        "Use nproc to see number of processors"
+      ]
+    },
+    {
+      "id": "nice-command-available",
+      "name": "Verify nice command is available",
+      "description": "The nice command should be available for setting process priorities",
+      "points": 1,
+      "fatal": false,
+      "checks": [
+        {
+          "type": "command",
+          "host": "servera",
+          "command": "which nice",
+          "expected_exit_code": 0
+        }
+      ],
+      "success_message": "nice command is available",
+      "failure_message": "nice command is not found",
+      "hints": [
+        "nice is part of coreutils package",
+        "Use: nice -n VALUE command to start a process with specific nice value"
+      ]
+    },
+    {
+      "id": "renice-command-available",
+      "name": "Verify renice command is available",
+      "description": "The renice command should be available for changing process priorities",
+      "points": 1,
+      "fatal": false,
+      "checks": [
+        {
+          "type": "command",
+          "host": "servera",
+          "command": "which renice",
+          "expected_exit_code": 0
+        }
+      ],
+      "success_message": "renice command is available",
+      "failure_message": "renice command is not found",
+      "hints": [
+        "renice is part of util-linux package",
+        "Use: sudo renice -n VALUE PID to change nice value of running process"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,193 @@
+{
+  "version": "1.0",
+  "metadata": {
+    "slug": "user-management",
+    "name": "Linux User and Group Management",
+    "description": "Create users, groups, and configure permissions",
+    "course": "rh124",
+    "chapter": "Chapter 6",
+    "estimated_time": "25 minutes",
+    "objectives": [
+      "Create system groups",
+      "Create user accounts with specific properties",
+      "Configure group memberships",
+      "Set up shared directories with proper permissions"
+    ],
+    "prerequisites": [
+      "Understanding of Linux users and groups",
+      "Basic permission concepts"
+    ],
+    "tags": ["users", "groups", "permissions", "security"]
+  },
+  "environment": {
+    "hosts": [
+      {
+        "name": "servera",
+        "description": "Server for user management practice",
+        "ssh_user": "student"
+      }
+    ],
+    "variables": {
+      "PROJECT_DIR": "/opt/project",
+      "GROUP_NAME": "developers"
+    }
+  },
+  "tasks": [
+    {
+      "id": "create-group",
+      "name": "Verify 'developers' group exists",
+      "description": "Create a group named 'developers'",
+      "points": 1,
+      "fatal": true,
+      "checks": [
+        {
+          "type": "group_exists",
+          "host": "servera",
+          "group": "developers"
+        }
+      ],
+      "success_message": "Group 'developers' exists",
+      "failure_message": "Group 'developers' does not exist",
+      "hints": [
+        "Use 'sudo groupadd developers' to create the group"
+      ]
+    },
+    {
+      "id": "create-user-alice",
+      "name": "Verify user 'alice' exists",
+      "description": "Create user alice with proper configuration",
+      "points": 2,
+      "checks": [
+        {
+          "type": "user_exists",
+          "host": "servera",
+          "username": "alice"
+        },
+        {
+          "type": "user_in_group",
+          "host": "servera",
+          "username": "alice",
+          "group": "developers"
+        }
+      ],
+      "success_message": "User 'alice' configured correctly",
+      "failure_message": "User 'alice' not configured correctly",
+      "hints": [
+        "Create user: sudo useradd alice",
+        "Add to group: sudo usermod -aG developers alice"
+      ]
+    },
+    {
+      "id": "create-user-bob",
+      "name": "Verify user 'bob' exists",
+      "description": "Create user bob with proper configuration",
+      "points": 2,
+      "checks": [
+        {
+          "type": "user_exists",
+          "host": "servera",
+          "username": "bob"
+        },
+        {
+          "type": "user_in_group",
+          "host": "servera",
+          "username": "bob",
+          "group": "developers"
+        }
+      ],
+      "success_message": "User 'bob' configured correctly",
+      "failure_message": "User 'bob' not configured correctly",
+      "hints": [
+        "Create user: sudo useradd bob",
+        "Add to group: sudo usermod -aG developers bob"
+      ]
+    },
+    {
+      "id": "project-directory",
+      "name": "Verify project directory exists",
+      "description": "Create the shared project directory",
+      "points": 1,
+      "checks": [
+        {
+          "type": "directory_exists",
+          "host": "servera",
+          "path": "${PROJECT_DIR}",
+          "user": "root"
+        }
+      ],
+      "success_message": "Project directory exists",
+      "failure_message": "Project directory does not exist",
+      "hints": [
+        "Use 'sudo mkdir -p /opt/project'"
+      ]
+    },
+    {
+      "id": "directory-ownership",
+      "name": "Verify project directory ownership",
+      "description": "Set correct ownership on project directory",
+      "points": 2,
+      "checks": [
+        {
+          "type": "file_owner",
+          "host": "servera",
+          "path": "${PROJECT_DIR}",
+          "owner": "root",
+          "group": "developers",
+          "user": "root"
+        }
+      ],
+      "success_message": "Directory ownership is correct",
+      "failure_message": "Directory ownership is incorrect",
+      "hints": [
+        "Use 'sudo chown root:developers /opt/project'"
+      ]
+    },
+    {
+      "id": "directory-permissions",
+      "name": "Verify project directory permissions",
+      "description": "Set permissions to allow group read/write with setgid",
+      "points": 2,
+      "checks": [
+        {
+          "type": "file_mode",
+          "host": "servera",
+          "path": "${PROJECT_DIR}",
+          "mode": "2770",
+          "user": "root"
+        }
+      ],
+      "success_message": "Directory permissions are correct (2770)",
+      "failure_message": "Directory permissions are incorrect",
+      "hints": [
+        "Use 'sudo chmod 2770 /opt/project'",
+        "The 2 enables setgid so new files inherit the group"
+      ]
+    },
+    {
+      "id": "test-file",
+      "name": "Verify group members can create files",
+      "description": "Files created in the directory should be group-writable",
+      "points": 1,
+      "checks": [
+        {
+          "type": "command",
+          "host": "servera",
+          "user": "root",
+          "command": "su - alice -c 'touch /opt/project/test-alice.txt' && test -f /opt/project/test-alice.txt",
+          "expected_exit_code": 0
+        }
+      ],
+      "success_message": "Group members can create files",
+      "failure_message": "Group members cannot create files in the directory"
+    }
+  ],
+  "cleanup": {
+    "enabled": false,
+    "commands": [
+      {
+        "command": "rm -f /opt/project/test-*.txt",
+        "ignore_errors": true
+      }
+    ]
+  }
+}

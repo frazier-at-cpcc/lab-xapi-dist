@@ -1,0 +1,215 @@
+{
+  "version": "1.0",
+  "metadata": {
+    "slug": "image-manage",
+    "name": "Manage Image Mode-based Systems",
+    "description": "Manage, inspect, modify, and update a server that uses image mode for Red Hat Enterprise Linux",
+    "course": "rh134",
+    "chapter": "Chapter 18",
+    "estimated_time": "45 minutes",
+    "objectives": [
+      "Update an image-mode based server to a new image to add new tools and features",
+      "Revert the server to a previous image to undo the changes"
+    ],
+    "prerequisites": [
+      "Completion of the Install Red Hat Enterprise Linux by Using Image Mode exercise",
+      "Understanding of bootc commands for image management",
+      "Familiarity with container image workflows"
+    ],
+    "tags": ["image-mode", "bootc", "upgrade", "rollback", "container", "rhel10"]
+  },
+  "environment": {
+    "hosts": [
+      {
+        "name": "workstation",
+        "description": "Container build workstation",
+        "ssh_user": "student"
+      },
+      {
+        "name": "serverc",
+        "description": "Image mode target system",
+        "ssh_user": "student"
+      }
+    ],
+    "variables": {
+      "REGISTRY": "registry.lab.example.com:5000",
+      "IMAGE_NAME": "student/webserver-bootc"
+    }
+  },
+  "tasks": [
+    {
+      "id": "indexhtml-local-edit",
+      "name": "Verify local index.html modification on serverc",
+      "description": "The index.html file on serverc should contain local modifications",
+      "points": 2,
+      "checks": [
+        {
+          "type": "file_contains",
+          "host": "serverc",
+          "path": "/var/www/html/index.html",
+          "pattern": "Local content edited on serverc"
+        }
+      ],
+      "success_message": "Local index.html correctly modified",
+      "failure_message": "Local index.html missing expected content",
+      "hints": [
+        "Run: echo 'Local content edited on serverc.' >> /var/www/html/index.html",
+        "The /var directory is mutable in image mode"
+      ]
+    },
+    {
+      "id": "containerfile-updated",
+      "name": "Verify updated Containerfile with additional packages",
+      "description": "The Containerfile should include mod_ssl and vim-enhanced packages",
+      "points": 2,
+      "checks": [
+        {
+          "type": "file_exists",
+          "host": "workstation",
+          "path": "/home/student/RH304/labs/image-manage/Containerfile"
+        },
+        {
+          "type": "file_contains",
+          "host": "workstation",
+          "path": "/home/student/RH304/labs/image-manage/Containerfile",
+          "pattern": "dnf\\s+-y\\s+install\\s+mod_ssl\\s+vim-enhanced"
+        }
+      ],
+      "success_message": "Containerfile correctly updated with additional packages",
+      "failure_message": "Containerfile missing mod_ssl and vim-enhanced installation",
+      "hints": [
+        "Add: RUN dnf -y install mod_ssl vim-enhanced && dnf clean all",
+        "This adds SSL support and the vim editor to the image"
+      ]
+    },
+    {
+      "id": "containerfile-new-indexhtml",
+      "name": "Verify Containerfile creates new index.html content",
+      "description": "The Containerfile should create modified index.html content",
+      "points": 1,
+      "checks": [
+        {
+          "type": "file_contains",
+          "host": "workstation",
+          "path": "/home/student/RH304/labs/image-manage/Containerfile",
+          "pattern": "Hello from a modified image-mode based installation"
+        }
+      ],
+      "success_message": "Containerfile includes new index.html content",
+      "failure_message": "Containerfile missing new index.html content",
+      "hints": [
+        "Add a RUN directive to create new index.html content",
+        "The content should say 'Hello from a modified image-mode based installation!'"
+      ]
+    },
+    {
+      "id": "updated-image-pushed",
+      "name": "Verify updated image pushed to registry",
+      "description": "The updated container image should be in the registry",
+      "points": 2,
+      "checks": [
+        {
+          "type": "command",
+          "host": "workstation",
+          "command": "podman search registry.lab.example.com:5000/ 2>/dev/null | grep -q 'student/webserver-bootc'",
+          "expected_exit_code": 0,
+          "timeout": 30
+        }
+      ],
+      "success_message": "Updated container image in registry",
+      "failure_message": "Updated container image not found in registry",
+      "hints": [
+        "Build: podman build --squash -t registry.lab.example.com:5000/student/webserver-bootc RH304/labs/image-manage/",
+        "Push: podman push registry.lab.example.com:5000/student/webserver-bootc"
+      ]
+    },
+    {
+      "id": "serverc-rollback-complete",
+      "name": "Verify serverc rolled back to original image",
+      "description": "After the exercise, serverc should be rolled back to the original image without mod_ssl",
+      "points": 3,
+      "checks": [
+        {
+          "type": "package_not_installed",
+          "host": "serverc",
+          "package": "mod_ssl"
+        },
+        {
+          "type": "package_not_installed",
+          "host": "serverc",
+          "package": "vim-enhanced"
+        }
+      ],
+      "success_message": "serverc successfully rolled back - packages not present",
+      "failure_message": "serverc still has upgraded packages installed",
+      "hints": [
+        "Run: bootc rollback",
+        "Then reboot the system: reboot",
+        "Verify: rpm -q mod_ssl vim-enhanced (should show not installed)"
+      ]
+    },
+    {
+      "id": "https-not-available",
+      "name": "Verify HTTPS not available after rollback",
+      "description": "After rollback, the HTTPS service should not be available",
+      "points": 2,
+      "checks": [
+        {
+          "type": "command",
+          "host": "workstation",
+          "command": "curl --insecure -s -o /dev/null -w '%{http_code}' --connect-timeout 3 https://serverc.lab.example.com 2>&1 | grep -qvE '^200$|^301$|^302$'",
+          "expected_exit_code": 0,
+          "timeout": 10
+        }
+      ],
+      "success_message": "HTTPS correctly unavailable after rollback",
+      "failure_message": "HTTPS is still available - rollback may not be complete",
+      "hints": [
+        "After rollback, mod_ssl is not installed so HTTPS should fail",
+        "Run: curl --insecure https://serverc.lab.example.com (should fail to connect)"
+      ]
+    },
+    {
+      "id": "http-still-works",
+      "name": "Verify HTTP still works after rollback",
+      "description": "The HTTP service should still work after rollback with local modifications preserved",
+      "points": 2,
+      "checks": [
+        {
+          "type": "command",
+          "host": "workstation",
+          "command": "curl -s http://serverc.lab.example.com | grep -q 'Local content edited on serverc'",
+          "expected_exit_code": 0,
+          "timeout": 10
+        }
+      ],
+      "success_message": "HTTP still working with local modifications preserved",
+      "failure_message": "HTTP not working or local modifications lost",
+      "hints": [
+        "Local modifications in /var are preserved across updates and rollbacks",
+        "Run: curl http://serverc.lab.example.com"
+      ]
+    },
+    {
+      "id": "bootc-shows-rollback",
+      "name": "Verify bootc status shows rollback state",
+      "description": "The bootc status should show the current booted image after rollback",
+      "points": 1,
+      "checks": [
+        {
+          "type": "command",
+          "host": "serverc",
+          "command": "sudo bootc status | grep -q 'Booted image'",
+          "expected_exit_code": 0,
+          "timeout": 15
+        }
+      ],
+      "success_message": "bootc status shows correct state",
+      "failure_message": "bootc status not showing expected state",
+      "hints": [
+        "Run: sudo bootc status",
+        "Should show the original image as the Booted image"
+      ]
+    }
+  ]
+}

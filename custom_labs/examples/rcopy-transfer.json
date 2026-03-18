@@ -1,0 +1,181 @@
+{
+  "version": "1.0",
+  "metadata": {
+    "slug": "rcopy-transfer",
+    "name": "Transfer Files Between Systems",
+    "description": "Securely transfer files to and from remote systems by using SSH utilities",
+    "course": "rh134",
+    "chapter": "Chapter 8",
+    "estimated_time": "20 minutes",
+    "objectives": [
+      "Copy files from a remote host to a directory on the local machine",
+      "Use sftp for interactive file transfers",
+      "Use scp for non-interactive file transfers"
+    ],
+    "prerequisites": [
+      "Access to servera and serverb machines",
+      "SSH access between systems"
+    ],
+    "tags": ["sftp", "scp", "ssh", "file-transfer", "remote-copy", "backup"]
+  },
+  "environment": {
+    "hosts": [
+      {
+        "name": "servera",
+        "description": "Destination server for file transfers",
+        "ssh_user": "student"
+      },
+      {
+        "name": "serverb",
+        "description": "Source server with SSH configuration files",
+        "ssh_user": "student"
+      }
+    ],
+    "variables": {}
+  },
+  "tasks": [
+    {
+      "id": "serverbackup1-directory",
+      "name": "Verify serverbackup1 directory exists",
+      "description": "The ~/serverbackup1 directory should exist on servera",
+      "points": 1,
+      "fatal": false,
+      "checks": [
+        {
+          "type": "directory_exists",
+          "host": "servera",
+          "path": "/home/student/serverbackup1"
+        }
+      ],
+      "success_message": "serverbackup1 directory exists",
+      "failure_message": "serverbackup1 directory does not exist",
+      "hints": [
+        "Create the directory: mkdir ~/serverbackup1"
+      ]
+    },
+    {
+      "id": "serverbackup2-directory",
+      "name": "Verify serverbackup2 directory exists",
+      "description": "The ~/serverbackup2 directory should exist on servera",
+      "points": 1,
+      "fatal": false,
+      "checks": [
+        {
+          "type": "directory_exists",
+          "host": "servera",
+          "path": "/home/student/serverbackup2"
+        }
+      ],
+      "success_message": "serverbackup2 directory exists",
+      "failure_message": "serverbackup2 directory does not exist",
+      "hints": [
+        "Create the directory: mkdir ~/serverbackup2"
+      ]
+    },
+    {
+      "id": "sftp-ssh-directory",
+      "name": "Verify ssh directory copied via sftp to serverbackup1",
+      "description": "The /etc/ssh directory from serverb should be copied to serverbackup1",
+      "points": 2,
+      "fatal": false,
+      "checks": [
+        {
+          "type": "directory_exists",
+          "host": "servera",
+          "path": "/home/student/serverbackup1/ssh"
+        }
+      ],
+      "success_message": "ssh directory exists in serverbackup1 (sftp transfer successful)",
+      "failure_message": "ssh directory not found in serverbackup1",
+      "hints": [
+        "Use sftp to copy: sftp root@serverb",
+        "In sftp: lcd /home/student/serverbackup1/",
+        "Then: get -r /etc/ssh"
+      ]
+    },
+    {
+      "id": "sftp-sshd-config",
+      "name": "Verify sshd_config file in serverbackup1",
+      "description": "The sshd_config file should exist in the sftp backup",
+      "points": 2,
+      "fatal": false,
+      "checks": [
+        {
+          "type": "file_exists",
+          "host": "servera",
+          "path": "/home/student/serverbackup1/ssh/sshd_config"
+        }
+      ],
+      "success_message": "sshd_config file exists in serverbackup1",
+      "failure_message": "sshd_config file not found in serverbackup1",
+      "hints": [
+        "The sftp transfer should have copied sshd_config from serverb:/etc/ssh/",
+        "Verify with: ls -l ~/serverbackup1/ssh/"
+      ]
+    },
+    {
+      "id": "scp-ssh-directory",
+      "name": "Verify ssh directory copied via scp to serverbackup2",
+      "description": "The /etc/ssh directory from serverb should be copied to serverbackup2",
+      "points": 2,
+      "fatal": false,
+      "checks": [
+        {
+          "type": "directory_exists",
+          "host": "servera",
+          "path": "/home/student/serverbackup2/ssh"
+        }
+      ],
+      "success_message": "ssh directory exists in serverbackup2 (scp transfer successful)",
+      "failure_message": "ssh directory not found in serverbackup2",
+      "hints": [
+        "Use scp to copy: scp -r root@serverb:/etc/ssh ~/serverbackup2"
+      ]
+    },
+    {
+      "id": "scp-sshd-config",
+      "name": "Verify sshd_config file in serverbackup2",
+      "description": "The sshd_config file should exist in the scp backup",
+      "points": 2,
+      "fatal": false,
+      "checks": [
+        {
+          "type": "file_exists",
+          "host": "servera",
+          "path": "/home/student/serverbackup2/ssh/sshd_config"
+        }
+      ],
+      "success_message": "sshd_config file exists in serverbackup2",
+      "failure_message": "sshd_config file not found in serverbackup2",
+      "hints": [
+        "The scp transfer should have copied sshd_config from serverb:/etc/ssh/",
+        "Verify with: ls -l ~/serverbackup2/ssh/"
+      ]
+    },
+    {
+      "id": "both-backups-complete",
+      "name": "Verify both backup directories have ssh_config files",
+      "description": "Both serverbackup1 and serverbackup2 should have ssh_config copied",
+      "points": 2,
+      "fatal": false,
+      "checks": [
+        {
+          "type": "file_exists",
+          "host": "servera",
+          "path": "/home/student/serverbackup1/ssh/ssh_config"
+        },
+        {
+          "type": "file_exists",
+          "host": "servera",
+          "path": "/home/student/serverbackup2/ssh/ssh_config"
+        }
+      ],
+      "success_message": "Both backups have ssh_config files",
+      "failure_message": "One or both backups are missing ssh_config",
+      "hints": [
+        "Verify sftp backup: ls -lR ~/serverbackup1",
+        "Verify scp backup: ls -lR ~/serverbackup2"
+      ]
+    }
+  ]
+}

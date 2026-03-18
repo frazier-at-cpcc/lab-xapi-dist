@@ -1,0 +1,220 @@
+{
+  "version": "1.0",
+  "metadata": {
+    "slug": "containers-image",
+    "name": "Create and Manage Container Images",
+    "description": "Create container images using Containerfiles, push to registries, and manage image lifecycle",
+    "course": "rh134",
+    "chapter": "Chapter 17",
+    "estimated_time": "30 minutes",
+    "objectives": [
+      "Create a simple container image by using a Containerfile",
+      "Create and run a container by using the container image",
+      "Push a container image to a local registry",
+      "Edit a container image configuration",
+      "Inspect container images",
+      "Remove container images"
+    ],
+    "prerequisites": [
+      "Podman installed on workstation",
+      "Access to container registry at registry.lab.example.com:5000"
+    ],
+    "tags": ["containers", "podman", "containerfile", "dockerfile", "images", "registry", "build"]
+  },
+  "environment": {
+    "hosts": [
+      {
+        "name": "workstation",
+        "description": "Workstation for building and managing container images",
+        "ssh_user": "student"
+      }
+    ],
+    "variables": {}
+  },
+  "tasks": [
+    {
+      "id": "registry-login",
+      "name": "Verify login to container registry",
+      "description": "Student should be logged in to registry.lab.example.com:5000",
+      "points": 1,
+      "fatal": false,
+      "checks": [
+        {
+          "type": "command",
+          "host": "workstation",
+          "command": "podman login --get-login registry.lab.example.com:5000 2>/dev/null | grep -q 'student'",
+          "expected_exit_code": 0
+        }
+      ],
+      "success_message": "Logged in to container registry as student",
+      "failure_message": "Not logged in to container registry",
+      "hints": [
+        "Login with: podman login registry.lab.example.com:5000",
+        "Use username: student, password: redhat"
+      ]
+    },
+    {
+      "id": "my-image-directory-exists",
+      "name": "Verify my_image directory exists",
+      "description": "The ~/my_image directory should exist for the Containerfile",
+      "points": 1,
+      "fatal": false,
+      "checks": [
+        {
+          "type": "directory_exists",
+          "host": "workstation",
+          "path": "/home/student/my_image"
+        }
+      ],
+      "success_message": "my_image directory exists",
+      "failure_message": "my_image directory does not exist",
+      "hints": [
+        "Create the directory: mkdir ~/my_image"
+      ]
+    },
+    {
+      "id": "containerfile-exists",
+      "name": "Verify Containerfile exists",
+      "description": "The Containerfile should exist in ~/my_image/",
+      "points": 1,
+      "fatal": false,
+      "checks": [
+        {
+          "type": "file_exists",
+          "host": "workstation",
+          "path": "/home/student/my_image/Containerfile"
+        }
+      ],
+      "success_message": "Containerfile exists",
+      "failure_message": "Containerfile does not exist",
+      "hints": [
+        "Create ~/my_image/Containerfile with the image definition"
+      ]
+    },
+    {
+      "id": "containerfile-ubi10-base",
+      "name": "Verify Containerfile uses ubi10 base image",
+      "description": "The final Containerfile should use ubi10/ubi as the base image",
+      "points": 2,
+      "fatal": false,
+      "checks": [
+        {
+          "type": "file_contains",
+          "host": "workstation",
+          "path": "/home/student/my_image/Containerfile",
+          "pattern": "FROM.*ubi10/ubi"
+        }
+      ],
+      "success_message": "Containerfile uses ubi10/ubi base image",
+      "failure_message": "Containerfile does not use ubi10/ubi base image",
+      "hints": [
+        "The FROM line should reference registry.lab.example.com:5000/ubi10/ubi",
+        "This is the final version (1.1) of the image"
+      ]
+    },
+    {
+      "id": "containerfile-cmd-ubi10",
+      "name": "Verify Containerfile CMD for ubi10 message",
+      "description": "The Containerfile should print the ubi10 message",
+      "points": 1,
+      "fatal": false,
+      "checks": [
+        {
+          "type": "file_contains",
+          "host": "workstation",
+          "path": "/home/student/my_image/Containerfile",
+          "pattern": "This container uses the ubi10/ubi image"
+        }
+      ],
+      "success_message": "Containerfile CMD is configured for ubi10 message",
+      "failure_message": "Containerfile CMD does not have the ubi10 message",
+      "hints": [
+        "CMD should echo: This container uses the ubi10/ubi image"
+      ]
+    },
+    {
+      "id": "my-image-v10-in-registry",
+      "name": "Verify my_image:1.0 exists in remote registry",
+      "description": "The my_image:1.0 image should be pushed to the remote registry",
+      "points": 2,
+      "fatal": false,
+      "checks": [
+        {
+          "type": "command",
+          "host": "workstation",
+          "command": "podman search --list-tags registry.lab.example.com:5000/my_image 2>/dev/null | grep -q '1.0'",
+          "expected_exit_code": 0
+        }
+      ],
+      "success_message": "my_image:1.0 exists in remote registry",
+      "failure_message": "my_image:1.0 is not in the remote registry",
+      "hints": [
+        "Build v1.0: podman build -t my_image:1.0 ~/my_image/",
+        "Push: podman push localhost/my_image:1.0 registry.lab.example.com:5000/my_image:1.0"
+      ]
+    },
+    {
+      "id": "my-image-v11-in-registry",
+      "name": "Verify my_image:1.1 exists in remote registry",
+      "description": "The my_image:1.1 image should be pushed to the remote registry",
+      "points": 2,
+      "fatal": false,
+      "checks": [
+        {
+          "type": "command",
+          "host": "workstation",
+          "command": "podman search --list-tags registry.lab.example.com:5000/my_image 2>/dev/null | grep -q '1.1'",
+          "expected_exit_code": 0
+        }
+      ],
+      "success_message": "my_image:1.1 exists in remote registry",
+      "failure_message": "my_image:1.1 is not in the remote registry",
+      "hints": [
+        "Build v1.1: podman build -t my_image:1.1 ~/my_image/",
+        "Push: podman push localhost/my_image:1.1 registry.lab.example.com:5000/my_image:1.1"
+      ]
+    },
+    {
+      "id": "my-image-removed-locally",
+      "name": "Verify my_image is removed from local storage",
+      "description": "Both versions of my_image should be removed from local storage",
+      "points": 2,
+      "fatal": false,
+      "checks": [
+        {
+          "type": "command",
+          "host": "workstation",
+          "command": "! podman images | grep -q 'localhost/my_image'",
+          "expected_exit_code": 0
+        }
+      ],
+      "success_message": "my_image is removed from local storage",
+      "failure_message": "my_image still exists in local storage",
+      "hints": [
+        "Remove with: podman rmi my_image:1.0 my_image:1.1",
+        "List local images: podman images"
+      ]
+    },
+    {
+      "id": "no-stopped-containers",
+      "name": "Verify no stopped containers exist",
+      "description": "All test containers should be removed",
+      "points": 1,
+      "fatal": false,
+      "checks": [
+        {
+          "type": "command",
+          "host": "workstation",
+          "command": "test $(podman ps -a -q | wc -l) -eq 0",
+          "expected_exit_code": 0
+        }
+      ],
+      "success_message": "No stopped containers exist",
+      "failure_message": "There are stopped containers that need to be removed",
+      "hints": [
+        "Remove containers with: podman rm <container-id>",
+        "List all containers: podman ps -a"
+      ]
+    }
+  ]
+}

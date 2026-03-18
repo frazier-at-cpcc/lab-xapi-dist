@@ -1,0 +1,110 @@
+{
+  "version": "1.0",
+  "metadata": {
+    "slug": "services-control",
+    "name": "Control System Services",
+    "description": "Control system daemons and network services with the systemctl command",
+    "course": "rh124",
+    "chapter": "Chapter 10",
+    "estimated_time": "20 minutes",
+    "objectives": [
+      "Restart and reload services with systemctl",
+      "Stop and start services",
+      "Enable and disable services for boot",
+      "Understand the difference between restart and reload"
+    ],
+    "prerequisites": [
+      "Access to servera machine",
+      "Root access via sudo"
+    ],
+    "tags": ["systemctl", "service", "restart", "reload", "stop", "start", "enable", "disable"]
+  },
+  "environment": {
+    "hosts": [
+      {
+        "name": "servera",
+        "description": "Server for service control practice",
+        "ssh_user": "student"
+      }
+    ],
+    "variables": {}
+  },
+  "tasks": [
+    {
+      "id": "sshd-running",
+      "name": "Verify sshd service is still running",
+      "description": "The sshd service should be active after restart/reload operations",
+      "points": 1,
+      "fatal": true,
+      "checks": [
+        {
+          "type": "service_running",
+          "host": "servera",
+          "service": "sshd"
+        }
+      ],
+      "success_message": "sshd service is running",
+      "failure_message": "sshd service is not running",
+      "hints": [
+        "Start sshd: sudo systemctl start sshd"
+      ]
+    },
+    {
+      "id": "sshd-enabled",
+      "name": "Verify sshd service is enabled",
+      "description": "The sshd service should remain enabled",
+      "points": 1,
+      "checks": [
+        {
+          "type": "service_enabled",
+          "host": "servera",
+          "service": "sshd"
+        }
+      ],
+      "success_message": "sshd service is enabled",
+      "failure_message": "sshd service is not enabled",
+      "hints": [
+        "Enable sshd: sudo systemctl enable sshd"
+      ]
+    },
+    {
+      "id": "chronyd-disabled",
+      "name": "Verify chronyd service is disabled",
+      "description": "The chronyd service should be disabled (final state)",
+      "points": 3,
+      "checks": [
+        {
+          "type": "command",
+          "host": "servera",
+          "command": "systemctl is-enabled chronyd | grep -q disabled",
+          "expected_exit_code": 0
+        }
+      ],
+      "success_message": "chronyd service is disabled",
+      "failure_message": "chronyd service is still enabled - should be disabled",
+      "hints": [
+        "Disable chronyd: sudo systemctl disable chronyd"
+      ]
+    },
+    {
+      "id": "chronyd-not-running",
+      "name": "Verify chronyd service is not running",
+      "description": "The chronyd service should be inactive (final state after reboot)",
+      "points": 3,
+      "checks": [
+        {
+          "type": "command",
+          "host": "servera",
+          "command": "! systemctl is-active chronyd | grep -q '^active$'",
+          "expected_exit_code": 0
+        }
+      ],
+      "success_message": "chronyd service is not running (inactive)",
+      "failure_message": "chronyd service is still running - should be stopped",
+      "hints": [
+        "Stop chronyd: sudo systemctl stop chronyd",
+        "After disabling, reboot to verify it doesn't start"
+      ]
+    }
+  ]
+}

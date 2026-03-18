@@ -1,0 +1,156 @@
+{
+  "version": "1.0",
+  "metadata": {
+    "slug": "rcopy-sync",
+    "name": "Synchronize Content Between Systems",
+    "description": "Synchronize the content of a local directory with a copy on a remote server",
+    "course": "rh134",
+    "chapter": "Chapter 8",
+    "estimated_time": "20 minutes",
+    "objectives": [
+      "Synchronize the contents of a local directory with a copy on a remote server",
+      "Use rsync to efficiently transfer only changed files"
+    ],
+    "prerequisites": [
+      "Access to servera and serverb machines",
+      "SSH access between systems",
+      "Root access on servera to read /var/log"
+    ],
+    "tags": ["rsync", "sync", "backup", "log-files", "remote-copy", "incremental"]
+  },
+  "environment": {
+    "hosts": [
+      {
+        "name": "servera",
+        "description": "Source server with log files to sync",
+        "ssh_user": "student"
+      },
+      {
+        "name": "serverb",
+        "description": "Destination server for synchronized logs",
+        "ssh_user": "student"
+      }
+    ],
+    "variables": {}
+  },
+  "tasks": [
+    {
+      "id": "serverlogs-directory",
+      "name": "Verify serverlogs directory exists on serverb",
+      "description": "The ~/serverlogs directory should exist on serverb to receive synced logs",
+      "points": 1,
+      "fatal": true,
+      "checks": [
+        {
+          "type": "directory_exists",
+          "host": "serverb",
+          "path": "/home/student/serverlogs"
+        }
+      ],
+      "success_message": "serverlogs directory exists on serverb",
+      "failure_message": "serverlogs directory does not exist on serverb",
+      "hints": [
+        "On serverb, create the directory: mkdir ~/serverlogs"
+      ]
+    },
+    {
+      "id": "log-directory-synced",
+      "name": "Verify log directory is synced to serverb",
+      "description": "The /var/log directory from servera should be synced to serverlogs/log on serverb",
+      "points": 2,
+      "fatal": false,
+      "checks": [
+        {
+          "type": "directory_exists",
+          "host": "serverb",
+          "path": "/home/student/serverlogs/log"
+        }
+      ],
+      "success_message": "log directory exists in serverlogs",
+      "failure_message": "log directory not found in serverlogs",
+      "hints": [
+        "From servera as root: rsync -av /var/log student@serverb:/home/student/serverlogs"
+      ]
+    },
+    {
+      "id": "messages-file-synced",
+      "name": "Verify messages log file is synced",
+      "description": "The messages log file should exist in the synced directory",
+      "points": 2,
+      "fatal": false,
+      "checks": [
+        {
+          "type": "file_exists",
+          "host": "serverb",
+          "path": "/home/student/serverlogs/log/messages"
+        }
+      ],
+      "success_message": "messages log file is synced",
+      "failure_message": "messages log file not found in synced directory",
+      "hints": [
+        "Run rsync from servera: sudo rsync -av /var/log student@serverb:/home/student/serverlogs",
+        "Verify on serverb: ls -l ~/serverlogs/log/"
+      ]
+    },
+    {
+      "id": "secure-log-synced",
+      "name": "Verify secure log file is synced",
+      "description": "The secure log file should exist in the synced directory",
+      "points": 1,
+      "fatal": false,
+      "checks": [
+        {
+          "type": "file_exists",
+          "host": "serverb",
+          "path": "/home/student/serverlogs/log/secure"
+        }
+      ],
+      "success_message": "secure log file is synced",
+      "failure_message": "secure log file not found in synced directory",
+      "hints": [
+        "Run rsync from servera: sudo rsync -av /var/log student@serverb:/home/student/serverlogs"
+      ]
+    },
+    {
+      "id": "sync-entry-logged",
+      "name": "Verify synchronization message in messages log",
+      "description": "The synced messages log should contain the 'Log files synchronized' entry",
+      "points": 3,
+      "fatal": false,
+      "checks": [
+        {
+          "type": "file_contains",
+          "host": "serverb",
+          "path": "/home/student/serverlogs/log/messages",
+          "pattern": "Log files synchronized"
+        }
+      ],
+      "success_message": "Synchronization message found in synced messages log",
+      "failure_message": "Synchronization message not found - may need to re-sync after logging",
+      "hints": [
+        "On servera as root: logger 'Log files synchronized'",
+        "Then re-sync: rsync -av /var/log student@serverb:/home/student/serverlogs",
+        "Verify on serverb: tail ~/serverlogs/log/messages"
+      ]
+    },
+    {
+      "id": "audit-log-synced",
+      "name": "Verify audit subdirectory is synced",
+      "description": "The audit subdirectory should be synced with log files",
+      "points": 2,
+      "fatal": false,
+      "checks": [
+        {
+          "type": "directory_exists",
+          "host": "serverb",
+          "path": "/home/student/serverlogs/log/audit"
+        }
+      ],
+      "success_message": "audit directory is synced",
+      "failure_message": "audit directory not found in synced logs",
+      "hints": [
+        "Run rsync from servera: sudo rsync -av /var/log student@serverb:/home/student/serverlogs"
+      ]
+    }
+  ]
+}

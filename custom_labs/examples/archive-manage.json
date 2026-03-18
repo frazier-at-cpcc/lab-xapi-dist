@@ -1,0 +1,201 @@
+{
+  "version": "1.0",
+  "metadata": {
+    "slug": "archive-manage",
+    "name": "Manage Compressed Tar Archives",
+    "description": "Archive a directory tree and extract the archive content to another location",
+    "course": "rh134",
+    "chapter": "Chapter 7",
+    "estimated_time": "20 minutes",
+    "objectives": [
+      "Create tar archives with different compression algorithms",
+      "Compare archive sizes between compression methods",
+      "Extract archive contents to a specified location"
+    ],
+    "prerequisites": [
+      "Access to servera machine",
+      "Root access via sudo"
+    ],
+    "tags": [
+      "tar",
+      "archive",
+      "gzip",
+      "bzip2",
+      "xz",
+      "compression",
+      "backup"
+    ]
+  },
+  "environment": {
+    "hosts": [
+      {
+        "name": "servera",
+        "description": "Server for archive management practice",
+        "ssh_user": "root"
+      }
+    ],
+    "variables": {}
+  },
+  "tasks": [
+    {
+      "id": "etc-tar-exists",
+      "name": "Verify /tmp/etc.tar archive exists",
+      "description": "An uncompressed tar archive of /etc should exist at /tmp/etc.tar",
+      "points": 1,
+      "fatal": false,
+      "checks": [
+        {
+          "type": "file_exists",
+          "host": "servera",
+          "path": "/tmp/etc.tar"
+        }
+      ],
+      "success_message": "/tmp/etc.tar archive exists",
+      "failure_message": "/tmp/etc.tar archive does not exist",
+      "hints": [
+        "Create the archive: sudo tar -cf /tmp/etc.tar /etc"
+      ]
+    },
+    {
+      "id": "etc-tar-gz-exists",
+      "name": "Verify /tmp/etc.tar.gz archive exists",
+      "description": "A gzip-compressed tar archive of /etc should exist at /tmp/etc.tar.gz",
+      "points": 1,
+      "fatal": false,
+      "checks": [
+        {
+          "type": "file_exists",
+          "host": "servera",
+          "path": "/tmp/etc.tar.gz"
+        }
+      ],
+      "success_message": "/tmp/etc.tar.gz archive exists",
+      "failure_message": "/tmp/etc.tar.gz archive does not exist",
+      "hints": [
+        "Create the archive: sudo tar -czf /tmp/etc.tar.gz /etc"
+      ]
+    },
+    {
+      "id": "etc-tar-bz2-exists",
+      "name": "Verify /tmp/etc.tar.bz2 archive exists",
+      "description": "A bzip2-compressed tar archive of /etc should exist at /tmp/etc.tar.bz2",
+      "points": 1,
+      "fatal": false,
+      "checks": [
+        {
+          "type": "file_exists",
+          "host": "servera",
+          "path": "/tmp/etc.tar.bz2"
+        }
+      ],
+      "success_message": "/tmp/etc.tar.bz2 archive exists",
+      "failure_message": "/tmp/etc.tar.bz2 archive does not exist",
+      "hints": [
+        "Create the archive: sudo tar -cjf /tmp/etc.tar.bz2 /etc"
+      ]
+    },
+    {
+      "id": "etc-tar-xz-exists",
+      "name": "Verify /tmp/etc.tar.xz archive exists",
+      "description": "An xz-compressed tar archive of /etc should exist at /tmp/etc.tar.xz",
+      "points": 1,
+      "fatal": false,
+      "checks": [
+        {
+          "type": "file_exists",
+          "host": "servera",
+          "path": "/tmp/etc.tar.xz"
+        }
+      ],
+      "success_message": "/tmp/etc.tar.xz archive exists",
+      "failure_message": "/tmp/etc.tar.xz archive does not exist",
+      "hints": [
+        "Create the archive: sudo tar -cJf /tmp/etc.tar.xz /etc"
+      ]
+    },
+    {
+      "id": "backuptest-directory-exists",
+      "name": "Verify /backuptest directory exists",
+      "description": "The /backuptest directory should exist for extracting archives",
+      "points": 1,
+      "fatal": false,
+      "checks": [
+        {
+          "type": "directory_exists",
+          "host": "servera",
+          "path": "/backuptest"
+        }
+      ],
+      "success_message": "/backuptest directory exists",
+      "failure_message": "/backuptest directory does not exist",
+      "hints": [
+        "Create the directory: sudo mkdir /backuptest"
+      ]
+    },
+    {
+      "id": "extracted-etc-directory",
+      "name": "Verify /backuptest/etc directory exists",
+      "description": "The extracted etc directory should exist in /backuptest",
+      "points": 2,
+      "fatal": false,
+      "checks": [
+        {
+          "type": "directory_exists",
+          "host": "servera",
+          "path": "/backuptest/etc"
+        }
+      ],
+      "success_message": "Extracted etc directory exists in /backuptest",
+      "failure_message": "Extracted etc directory does not exist in /backuptest",
+      "hints": [
+        "Extract the archive: cd /backuptest && sudo tar -xzf /tmp/etc.tar.gz"
+      ]
+    },
+    {
+      "id": "extracted-files-valid",
+      "name": "Verify extracted files contain expected content",
+      "description": "The extracted /backuptest/etc should contain typical configuration files",
+      "points": 2,
+      "fatal": false,
+      "checks": [
+        {
+          "type": "file_exists",
+          "host": "servera",
+          "path": "/backuptest/etc/passwd"
+        },
+        {
+          "type": "file_exists",
+          "host": "servera",
+          "path": "/backuptest/etc/hosts"
+        }
+      ],
+      "success_message": "Extracted files are valid (passwd and hosts found)",
+      "failure_message": "Extracted files are missing or incomplete",
+      "hints": [
+        "Extract the archive: cd /backuptest && sudo tar -xzf /tmp/etc.tar.gz",
+        "List contents: ls -l /backuptest/etc"
+      ]
+    },
+    {
+      "id": "archive-valid-content",
+      "name": "Verify etc.tar.gz archive contains valid content",
+      "description": "The tar.gz archive should list etc/ contents when viewed",
+      "points": 2,
+      "fatal": false,
+      "checks": [
+        {
+          "type": "command",
+          "host": "servera",
+          "command": "tar -tzf /tmp/etc.tar.gz | grep -q '^etc/'",
+          "expected_exit_code": 0
+        }
+      ],
+      "success_message": "Archive contains valid etc/ content",
+      "failure_message": "Archive does not contain expected etc/ content",
+      "hints": [
+        "List archive contents: tar -tzf /tmp/etc.tar.gz | head",
+        "Recreate if needed: sudo tar -czf /tmp/etc.tar.gz /etc"
+      ]
+    }
+  ]
+}

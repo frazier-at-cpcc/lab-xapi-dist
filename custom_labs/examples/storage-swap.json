@@ -1,0 +1,148 @@
+{
+  "version": "1.0",
+  "metadata": {
+    "slug": "storage-swap",
+    "name": "Manage Swap Space",
+    "description": "Create and activate a swap space to supplement physical memory",
+    "course": "rh134",
+    "chapter": "Chapter 10",
+    "estimated_time": "20 minutes",
+    "objectives": [
+      "Create a swap partition",
+      "Activate the swap space and make it available persistently"
+    ],
+    "prerequisites": [
+      "Basic Linux command-line skills",
+      "Understanding of disk partitioning concepts"
+    ],
+    "tags": [
+      "swap",
+      "swapon",
+      "mkswap",
+      "parted",
+      "fstab",
+      "storage",
+      "memory"
+    ]
+  },
+  "environment": {
+    "hosts": [
+      {
+        "name": "servera",
+        "description": "Target server for swap space configuration",
+        "ssh_user": "root"
+      }
+    ],
+    "variables": {}
+  },
+  "tasks": [
+    {
+      "id": "sdb2-partition-exists",
+      "name": "Verify /dev/sdb2 swap partition exists",
+      "description": "A swap partition /dev/sdb2 should exist on the disk",
+      "points": 2,
+      "fatal": true,
+      "checks": [
+        {
+          "type": "command",
+          "host": "servera",
+          "command": "lsblk /dev/sdb2",
+          "expected_exit_code": 0
+        }
+      ],
+      "success_message": "Partition /dev/sdb2 exists",
+      "failure_message": "Partition /dev/sdb2 does not exist",
+      "hints": [
+        "Create partition with: sudo parted /dev/sdb mkpart myswap linux-swap 1001MB 1501MB",
+        "Register with: sudo udevadm settle",
+        "Verify with: lsblk /dev/sdb"
+      ]
+    },
+    {
+      "id": "sdb2-swap-type",
+      "name": "Verify /dev/sdb2 has swap partition type",
+      "description": "The /dev/sdb2 partition should have the swap flag set",
+      "points": 1,
+      "fatal": false,
+      "checks": [
+        {
+          "type": "command",
+          "host": "servera",
+          "command": "parted /dev/sdb print | grep -E '2.*swap'",
+          "expected_exit_code": 0
+        }
+      ],
+      "success_message": "Partition /dev/sdb2 has swap type",
+      "failure_message": "Partition /dev/sdb2 does not have swap type flag",
+      "hints": [
+        "Set partition type with: sudo parted /dev/sdb set 2 swap on",
+        "Or create partition with linux-swap type"
+      ]
+    },
+    {
+      "id": "sdb2-swap-initialized",
+      "name": "Verify /dev/sdb2 is initialized as swap",
+      "description": "The /dev/sdb2 partition should be formatted as swap space",
+      "points": 2,
+      "fatal": false,
+      "checks": [
+        {
+          "type": "command",
+          "host": "servera",
+          "command": "lsblk -f /dev/sdb2 | grep -i swap",
+          "expected_exit_code": 0
+        }
+      ],
+      "success_message": "Partition /dev/sdb2 is initialized as swap",
+      "failure_message": "Partition /dev/sdb2 is not initialized as swap",
+      "hints": [
+        "Initialize swap with: sudo mkswap /dev/sdb2",
+        "Verify with: lsblk -f /dev/sdb2"
+      ]
+    },
+    {
+      "id": "fstab-swap-entry",
+      "name": "Verify /etc/fstab entry for swap",
+      "description": "An entry for the swap partition should exist in /etc/fstab",
+      "points": 2,
+      "fatal": false,
+      "checks": [
+        {
+          "type": "file_contains",
+          "host": "servera",
+          "path": "/etc/fstab",
+          "pattern": "swap.*swap.*defaults"
+        }
+      ],
+      "success_message": "fstab entry for swap exists",
+      "failure_message": "fstab entry for swap is missing or incorrect",
+      "hints": [
+        "Get UUID with: lsblk --fs /dev/sdb2",
+        "Add to /etc/fstab: UUID=<your-uuid> swap swap defaults 0 0",
+        "Run: sudo systemctl daemon-reload after editing fstab"
+      ]
+    },
+    {
+      "id": "swap-active",
+      "name": "Verify swap space is active",
+      "description": "The swap partition should be activated and in use",
+      "points": 2,
+      "fatal": false,
+      "checks": [
+        {
+          "type": "command",
+          "host": "servera",
+          "command": "swapon --show | grep '/dev/sdb2'",
+          "expected_exit_code": 0
+        }
+      ],
+      "success_message": "Swap space is active",
+      "failure_message": "Swap space is not active",
+      "hints": [
+        "Activate swap with: sudo swapon /dev/sdb2",
+        "Or activate from fstab: sudo swapon -a",
+        "Verify with: swapon --show"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,134 @@
+{
+  "version": "1.0",
+  "metadata": {
+    "slug": "logs-syslog",
+    "name": "Interpret and Manage Syslog Events",
+    "description": "Configure the syslog log file to redirect all the log messages of a specified priority to a log file",
+    "course": "rh134",
+    "chapter": "Chapter 5",
+    "estimated_time": "15 minutes",
+    "objectives": [
+      "Configure the syslog log file to use the rsyslog service to write all log messages with the debug priority to a log file"
+    ],
+    "prerequisites": [
+      "Basic understanding of syslog",
+      "Familiarity with rsyslog service"
+    ],
+    "tags": [
+      "syslog",
+      "rsyslog",
+      "logging",
+      "debug",
+      "configuration"
+    ]
+  },
+  "environment": {
+    "hosts": [
+      {
+        "name": "servera",
+        "description": "Target server for rsyslog configuration",
+        "ssh_user": "root"
+      }
+    ],
+    "variables": {}
+  },
+  "tasks": [
+    {
+      "id": "debug-conf-exists",
+      "name": "Verify debug.conf configuration file exists",
+      "description": "The /etc/rsyslog.d/debug.conf file must exist with rsyslog rules",
+      "points": 1,
+      "fatal": true,
+      "checks": [
+        {
+          "type": "file_exists",
+          "host": "servera",
+          "path": "/etc/rsyslog.d/debug.conf"
+        }
+      ],
+      "success_message": "The debug.conf configuration file exists",
+      "failure_message": "The debug.conf configuration file is missing",
+      "hints": [
+        "Create /etc/rsyslog.d/debug.conf with the rsyslog rule"
+      ]
+    },
+    {
+      "id": "debug-rule-configured",
+      "name": "Verify debug logging rule is configured",
+      "description": "The debug.conf must contain the rule to log debug messages to /var/log/messages-debug",
+      "points": 2,
+      "checks": [
+        {
+          "type": "file_contains",
+          "host": "servera",
+          "path": "/etc/rsyslog.d/debug.conf",
+          "pattern": "\\*\\.debug\\s+/var/log/messages-debug"
+        }
+      ],
+      "success_message": "Debug logging rule is correctly configured",
+      "failure_message": "Debug logging rule is not correctly configured",
+      "hints": [
+        "The file should contain: *.debug /var/log/messages-debug",
+        "This logs all facilities at debug priority or higher"
+      ]
+    },
+    {
+      "id": "rsyslog-running",
+      "name": "Verify rsyslog service is running",
+      "description": "The rsyslog service must be running for logging to work",
+      "points": 1,
+      "checks": [
+        {
+          "type": "service_running",
+          "host": "servera",
+          "service": "rsyslog"
+        }
+      ],
+      "success_message": "The rsyslog service is running",
+      "failure_message": "The rsyslog service is not running",
+      "hints": [
+        "Restart rsyslog: sudo systemctl restart rsyslog"
+      ]
+    },
+    {
+      "id": "debug-logfile-exists",
+      "name": "Verify debug log file exists",
+      "description": "The /var/log/messages-debug file should exist after rsyslog restart",
+      "points": 1,
+      "checks": [
+        {
+          "type": "file_exists",
+          "host": "servera",
+          "path": "/var/log/messages-debug"
+        }
+      ],
+      "success_message": "The debug log file exists",
+      "failure_message": "The debug log file does not exist",
+      "hints": [
+        "Restart rsyslog to create the file: sudo systemctl restart rsyslog",
+        "Generate a test message: logger -p user.debug 'Test message'"
+      ]
+    },
+    {
+      "id": "debug-logging-works",
+      "name": "Verify debug messages are being logged",
+      "description": "Debug messages should appear in /var/log/messages-debug",
+      "points": 2,
+      "checks": [
+        {
+          "type": "command",
+          "host": "servera",
+          "command": "logger -p user.debug 'GradeTest' && sleep 1 && grep -q 'GradeTest\\|rsyslog\\|systemd' /var/log/messages-debug",
+          "expected_exit_code": 0
+        }
+      ],
+      "success_message": "Debug logging is working correctly",
+      "failure_message": "Debug messages are not being logged",
+      "hints": [
+        "Ensure rsyslog was restarted after creating debug.conf",
+        "Run: sudo systemctl restart rsyslog",
+        "Test with: logger -p user.debug 'Debug Message Test'"
+      ]
+    }
+  ]
+}

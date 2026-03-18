@@ -1,0 +1,119 @@
+{
+  "version": "1.0",
+  "metadata": {
+    "slug": "logs-preserve",
+    "name": "Configure a Persistent System Journal",
+    "description": "Configure a system journal to make the log events persist after a reboot",
+    "course": "rh134",
+    "chapter": "Chapter 5",
+    "estimated_time": "15 minutes",
+    "objectives": [
+      "Configure a system journal to preserve the log events after a reboot"
+    ],
+    "prerequisites": [
+      "Basic understanding of journalctl",
+      "Familiarity with systemd-journald"
+    ],
+    "tags": [
+      "journalctl",
+      "systemd",
+      "journal",
+      "persistent",
+      "logging"
+    ]
+  },
+  "environment": {
+    "hosts": [
+      {
+        "name": "servera",
+        "description": "Target server for persistent journal configuration",
+        "ssh_user": "root"
+      }
+    ],
+    "variables": {}
+  },
+  "tasks": [
+    {
+      "id": "journal-directory-exists",
+      "name": "Verify /var/log/journal directory exists",
+      "description": "The /var/log/journal directory must exist for persistent journal storage",
+      "points": 2,
+      "fatal": true,
+      "checks": [
+        {
+          "type": "directory_exists",
+          "host": "servera",
+          "path": "/var/log/journal"
+        }
+      ],
+      "success_message": "The /var/log/journal directory exists",
+      "failure_message": "The /var/log/journal directory does not exist",
+      "hints": [
+        "Create the directory: sudo mkdir /var/log/journal",
+        "This enables persistent journal storage"
+      ]
+    },
+    {
+      "id": "journal-files-exist",
+      "name": "Verify journal files exist in persistent storage",
+      "description": "Journal files should exist in a subdirectory of /var/log/journal",
+      "points": 2,
+      "checks": [
+        {
+          "type": "command",
+          "host": "servera",
+          "command": "find /var/log/journal -name '*.journal' 2>/dev/null | head -1 | grep -q journal",
+          "expected_exit_code": 0
+        }
+      ],
+      "success_message": "Journal files exist in persistent storage",
+      "failure_message": "No journal files found in persistent storage",
+      "hints": [
+        "After creating /var/log/journal, run: journalctl --flush",
+        "Then verify with: ls /var/log/journal/*/",
+        "You may need to reboot for journals to persist"
+      ]
+    },
+    {
+      "id": "system-journal-exists",
+      "name": "Verify system.journal file exists",
+      "description": "The system.journal file should exist for system-wide logs",
+      "points": 2,
+      "checks": [
+        {
+          "type": "command",
+          "host": "servera",
+          "command": "find /var/log/journal -name 'system.journal' 2>/dev/null | head -1 | grep -q system.journal",
+          "expected_exit_code": 0
+        }
+      ],
+      "success_message": "The system.journal file exists",
+      "failure_message": "The system.journal file does not exist",
+      "hints": [
+        "Run: journalctl --flush to write journal to disk",
+        "The system.journal file stores system-wide logs"
+      ]
+    },
+    {
+      "id": "journal-readable",
+      "name": "Verify persistent journal is readable",
+      "description": "The persistent journal should be readable with journalctl",
+      "points": 2,
+      "checks": [
+        {
+          "type": "command",
+          "host": "servera",
+          "command": "journalctl --list-boots 2>/dev/null | wc -l | grep -qE '^[1-9]'",
+          "expected_exit_code": 0
+        }
+      ],
+      "success_message": "Persistent journal is readable and contains boot records",
+      "failure_message": "Persistent journal is not working correctly",
+      "hints": [
+        "Use: journalctl --list-boots to see available boot logs",
+        "If only one boot is listed, the journal became persistent after the last boot",
+        "Multiple boots indicate the journal persisted across reboots"
+      ]
+    }
+  ]
+}

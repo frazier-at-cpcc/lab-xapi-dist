@@ -1,0 +1,173 @@
+{
+  "version": "1.0",
+  "metadata": {
+    "slug": "selinux-issues",
+    "name": "Investigate and Resolve SELinux Issues",
+    "description": "Troubleshoot SELinux issues by using SELinux log analysis tools and interpreting their output",
+    "course": "rh134",
+    "chapter": "Chapter 6",
+    "estimated_time": "30 minutes",
+    "objectives": [
+      "Gain experience with SELinux troubleshooting tools",
+      "Use sealert and ausearch to diagnose SELinux denials",
+      "Resolve SELinux issues by applying correct file contexts"
+    ],
+    "prerequisites": [
+      "Access to servera machine",
+      "Root access via sudo",
+      "Understanding of SELinux contexts and troubleshooting"
+    ],
+    "tags": [
+      "selinux",
+      "sealert",
+      "ausearch",
+      "troubleshooting",
+      "httpd",
+      "fcontext",
+      "restorecon",
+      "audit"
+    ]
+  },
+  "environment": {
+    "hosts": [
+      {
+        "name": "servera",
+        "description": "Web server with SELinux issues to troubleshoot",
+        "ssh_user": "root"
+      }
+    ],
+    "variables": {}
+  },
+  "tasks": [
+    {
+      "id": "custom-directory-exists",
+      "name": "Verify /custom directory exists",
+      "description": "The /custom directory should exist for web content",
+      "points": 1,
+      "fatal": true,
+      "checks": [
+        {
+          "type": "directory_exists",
+          "host": "servera",
+          "path": "/custom"
+        }
+      ],
+      "success_message": "/custom directory exists",
+      "failure_message": "/custom directory does not exist",
+      "hints": [
+        "The lab setup should have created this directory",
+        "If missing, run: sudo mkdir /custom"
+      ]
+    },
+    {
+      "id": "index-html-exists",
+      "name": "Verify /custom/index.html exists",
+      "description": "The index.html file should exist in /custom",
+      "points": 1,
+      "fatal": false,
+      "checks": [
+        {
+          "type": "file_exists",
+          "host": "servera",
+          "path": "/custom/index.html"
+        },
+        {
+          "type": "file_contains",
+          "host": "servera",
+          "path": "/custom/index.html",
+          "pattern": "This is SERVERA"
+        }
+      ],
+      "success_message": "index.html exists with correct content",
+      "failure_message": "index.html is missing or has incorrect content",
+      "hints": [
+        "Create the file: echo 'This is SERVERA.' | sudo tee /custom/index.html"
+      ]
+    },
+    {
+      "id": "selinux-fcontext-rule",
+      "name": "Verify SELinux file context rule for /custom",
+      "description": "An SELinux file context rule should exist for /custom with httpd_sys_content_t",
+      "points": 2,
+      "fatal": false,
+      "checks": [
+        {
+          "type": "command",
+          "host": "servera",
+          "command": "semanage fcontext -l | grep -E '/custom.*httpd_sys_content_t'",
+          "expected_exit_code": 0
+        }
+      ],
+      "success_message": "SELinux file context rule is configured for /custom",
+      "failure_message": "SELinux file context rule is missing for /custom",
+      "hints": [
+        "Add the rule: sudo semanage fcontext -a -t httpd_sys_content_t '/custom(/.*)?'",
+        "This defines the context policy for the directory"
+      ]
+    },
+    {
+      "id": "custom-selinux-context",
+      "name": "Verify /custom has httpd_sys_content_t context",
+      "description": "The /custom directory should have the httpd_sys_content_t SELinux context",
+      "points": 2,
+      "fatal": false,
+      "checks": [
+        {
+          "type": "selinux_context",
+          "host": "servera",
+          "path": "/custom",
+          "context": "httpd_sys_content_t"
+        }
+      ],
+      "success_message": "/custom has correct SELinux context",
+      "failure_message": "/custom does not have httpd_sys_content_t context",
+      "hints": [
+        "Apply the context: sudo restorecon -Rv /custom",
+        "Verify with: ls -ldZ /custom"
+      ]
+    },
+    {
+      "id": "index-html-selinux-context",
+      "name": "Verify /custom/index.html has httpd_sys_content_t context",
+      "description": "The index.html file should have the httpd_sys_content_t SELinux context",
+      "points": 2,
+      "fatal": false,
+      "checks": [
+        {
+          "type": "selinux_context",
+          "host": "servera",
+          "path": "/custom/index.html",
+          "context": "httpd_sys_content_t"
+        }
+      ],
+      "success_message": "index.html has correct SELinux context",
+      "failure_message": "index.html does not have httpd_sys_content_t context",
+      "hints": [
+        "Apply the context: sudo restorecon -Rv /custom",
+        "Verify with: ls -lZ /custom/index.html"
+      ]
+    },
+    {
+      "id": "web-content-accessible",
+      "name": "Verify web content is accessible via HTTP",
+      "description": "The web page at http://servera/index.html should return the expected content",
+      "points": 3,
+      "fatal": false,
+      "checks": [
+        {
+          "type": "command",
+          "host": "servera",
+          "command": "curl -s http://localhost/index.html | grep -q 'This is SERVERA'",
+          "expected_exit_code": 0
+        }
+      ],
+      "success_message": "Web content is accessible - SELinux issue resolved",
+      "failure_message": "Web content is not accessible - SELinux issue may persist",
+      "hints": [
+        "Check SELinux contexts: ls -ldZ /custom /custom/index.html",
+        "Check httpd status: sudo systemctl status httpd",
+        "Review sealert for any remaining issues: sudo sealert -a /var/log/audit/audit.log"
+      ]
+    }
+  ]
+}

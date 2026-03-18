@@ -1,0 +1,158 @@
+{
+  "version": "1.0",
+  "metadata": {
+    "slug": "tuning-profiles",
+    "name": "Set a Tuning Profile",
+    "description": "Tune system performance by selecting an appropriate tuning profile",
+    "course": "rh134",
+    "chapter": "Chapter 9",
+    "estimated_time": "15 minutes",
+    "objectives": [
+      "Persistently switch to a new tuning profile",
+      "Validate the resulting system settings"
+    ],
+    "prerequisites": [
+      "Basic Linux command-line skills",
+      "Understanding of system performance concepts"
+    ],
+    "tags": ["tuned", "performance", "tuning", "sysctl", "vm.swappiness", "vm.dirty_ratio"]
+  },
+  "environment": {
+    "hosts": [
+      {
+        "name": "servera",
+        "description": "Target server for tuning profile configuration",
+        "ssh_user": "student"
+      }
+    ],
+    "variables": {}
+  },
+  "tasks": [
+    {
+      "id": "tuned-package-installed",
+      "name": "Verify tuned package is installed",
+      "description": "The tuned package must be installed on servera",
+      "points": 1,
+      "fatal": true,
+      "checks": [
+        {
+          "type": "package_installed",
+          "host": "servera",
+          "package": "tuned"
+        }
+      ],
+      "success_message": "The tuned package is installed",
+      "failure_message": "The tuned package is not installed",
+      "hints": [
+        "Install with: sudo dnf install tuned",
+        "Verify with: dnf list tuned"
+      ]
+    },
+    {
+      "id": "tuned-service-enabled",
+      "name": "Verify tuned service is enabled",
+      "description": "The tuned service must be enabled to start at boot",
+      "points": 1,
+      "fatal": false,
+      "checks": [
+        {
+          "type": "service_enabled",
+          "host": "servera",
+          "service": "tuned"
+        }
+      ],
+      "success_message": "The tuned service is enabled",
+      "failure_message": "The tuned service is not enabled",
+      "hints": [
+        "Enable with: sudo systemctl enable tuned",
+        "Check with: systemctl is-enabled tuned"
+      ]
+    },
+    {
+      "id": "tuned-service-running",
+      "name": "Verify tuned service is running",
+      "description": "The tuned service must be running",
+      "points": 1,
+      "fatal": false,
+      "checks": [
+        {
+          "type": "service_running",
+          "host": "servera",
+          "service": "tuned"
+        }
+      ],
+      "success_message": "The tuned service is running",
+      "failure_message": "The tuned service is not running",
+      "hints": [
+        "Start with: sudo systemctl start tuned",
+        "Check with: systemctl is-active tuned"
+      ]
+    },
+    {
+      "id": "latency-performance-profile-active",
+      "name": "Verify latency-performance profile is active",
+      "description": "The latency-performance tuning profile must be the active profile",
+      "points": 2,
+      "fatal": false,
+      "checks": [
+        {
+          "type": "command",
+          "host": "servera",
+          "command": "tuned-adm active",
+          "expected_stdout": "latency-performance"
+        }
+      ],
+      "success_message": "The latency-performance profile is active",
+      "failure_message": "The latency-performance profile is not active",
+      "hints": [
+        "Set profile with: sudo tuned-adm profile latency-performance",
+        "Verify with: tuned-adm active",
+        "List available profiles with: tuned-adm list"
+      ]
+    },
+    {
+      "id": "vm-dirty-ratio-set",
+      "name": "Verify vm.dirty_ratio is set to 10",
+      "description": "The vm.dirty_ratio kernel parameter should be 10 (from latency-performance profile)",
+      "points": 2,
+      "fatal": false,
+      "checks": [
+        {
+          "type": "command",
+          "host": "servera",
+          "command": "sysctl vm.dirty_ratio",
+          "expected_stdout": "vm.dirty_ratio = 10"
+        }
+      ],
+      "success_message": "vm.dirty_ratio is correctly set to 10",
+      "failure_message": "vm.dirty_ratio is not set to the expected value of 10",
+      "hints": [
+        "This value is set by the latency-performance profile",
+        "Check with: sysctl vm.dirty_ratio",
+        "If profile is correct but value is wrong, try: sudo tuned-adm profile latency-performance"
+      ]
+    },
+    {
+      "id": "vm-swappiness-set",
+      "name": "Verify vm.swappiness is set to 10",
+      "description": "The vm.swappiness kernel parameter should be 10 (from latency-performance profile)",
+      "points": 2,
+      "fatal": false,
+      "checks": [
+        {
+          "type": "command",
+          "host": "servera",
+          "command": "sysctl vm.swappiness",
+          "expected_stdout": "vm.swappiness = 10"
+        }
+      ],
+      "success_message": "vm.swappiness is correctly set to 10",
+      "failure_message": "vm.swappiness is not set to the expected value of 10",
+      "hints": [
+        "This value is set by the latency-performance profile",
+        "Check with: sysctl vm.swappiness",
+        "Run: tuned-adm verify to check if settings match profile"
+      ]
+    }
+  ]
+}

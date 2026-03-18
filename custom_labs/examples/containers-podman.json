@@ -1,0 +1,159 @@
+{
+  "version": "1.0",
+  "metadata": {
+    "slug": "containers-podman",
+    "name": "Run Containers with Podman",
+    "description": "Run, stop, and remove containers using Podman",
+    "course": "rh134",
+    "chapter": "Chapter 17",
+    "estimated_time": "20 minutes",
+    "objectives": [
+      "Run a container that finishes its task and exits",
+      "Run a container in detached mode",
+      "Stop and remove containers"
+    ],
+    "prerequisites": [
+      "Podman installed on workstation",
+      "Access to container registry"
+    ],
+    "tags": ["containers", "podman", "docker", "ubi", "httpd", "detached"]
+  },
+  "environment": {
+    "hosts": [
+      {
+        "name": "workstation",
+        "description": "Workstation for running containers",
+        "ssh_user": "student"
+      }
+    ],
+    "variables": {}
+  },
+  "tasks": [
+    {
+      "id": "registry-login",
+      "name": "Verify login to container registry",
+      "description": "Student should be logged in to registry.lab.example.com:5000",
+      "points": 1,
+      "fatal": false,
+      "checks": [
+        {
+          "type": "command",
+          "host": "workstation",
+          "command": "podman login --get-login registry.lab.example.com:5000 2>/dev/null | grep -q 'student'",
+          "expected_exit_code": 0
+        }
+      ],
+      "success_message": "Logged in to container registry as student",
+      "failure_message": "Not logged in to container registry",
+      "hints": [
+        "Login with: podman login registry.lab.example.com:5000",
+        "Use username: student, password: redhat"
+      ]
+    },
+    {
+      "id": "ubi-image-pulled",
+      "name": "Verify UBI image is available locally",
+      "description": "The ubi10/ubi image should be pulled from the registry",
+      "points": 1,
+      "fatal": false,
+      "checks": [
+        {
+          "type": "command",
+          "host": "workstation",
+          "command": "podman images | grep -q 'ubi10/ubi'",
+          "expected_exit_code": 0
+        }
+      ],
+      "success_message": "UBI image is available locally",
+      "failure_message": "UBI image is not found locally",
+      "hints": [
+        "Pull with: podman pull registry.lab.example.com:5000/ubi10/ubi",
+        "Or run a container to automatically pull the image"
+      ]
+    },
+    {
+      "id": "httpd-image-pulled",
+      "name": "Verify httpd image is available locally",
+      "description": "The rhel10/httpd-24 image should be pulled from the registry",
+      "points": 1,
+      "fatal": false,
+      "checks": [
+        {
+          "type": "command",
+          "host": "workstation",
+          "command": "podman images | grep -q 'httpd-24'",
+          "expected_exit_code": 0
+        }
+      ],
+      "success_message": "httpd-24 image is available locally",
+      "failure_message": "httpd-24 image is not found locally",
+      "hints": [
+        "Pull with: podman pull registry.lab.example.com:5000/rhel10/httpd-24",
+        "Or run a container to automatically pull the image"
+      ]
+    },
+    {
+      "id": "no-running-containers",
+      "name": "Verify no containers are running",
+      "description": "All containers should be stopped (exercise cleanup)",
+      "points": 2,
+      "fatal": false,
+      "checks": [
+        {
+          "type": "command",
+          "host": "workstation",
+          "command": "test $(podman ps -q | wc -l) -eq 0",
+          "expected_exit_code": 0
+        }
+      ],
+      "success_message": "No containers are currently running",
+      "failure_message": "There are still running containers",
+      "hints": [
+        "Stop containers with: podman stop <container-name>",
+        "List running containers: podman ps"
+      ]
+    },
+    {
+      "id": "no-stopped-containers",
+      "name": "Verify no stopped containers exist",
+      "description": "All containers should be removed (exercise cleanup)",
+      "points": 2,
+      "fatal": false,
+      "checks": [
+        {
+          "type": "command",
+          "host": "workstation",
+          "command": "test $(podman ps -a -q | wc -l) -eq 0",
+          "expected_exit_code": 0
+        }
+      ],
+      "success_message": "No stopped containers exist",
+      "failure_message": "There are stopped containers that need to be removed",
+      "hints": [
+        "Remove containers with: podman rm <container-id>",
+        "List all containers: podman ps -a"
+      ]
+    },
+    {
+      "id": "port-8080-free",
+      "name": "Verify port 8080 is not in use",
+      "description": "Port 8080 should be free after removing the web server container",
+      "points": 1,
+      "fatal": false,
+      "checks": [
+        {
+          "type": "command",
+          "host": "workstation",
+          "command": "! ss -tlnp | grep -q ':8080'",
+          "expected_exit_code": 0
+        }
+      ],
+      "success_message": "Port 8080 is free",
+      "failure_message": "Port 8080 is still in use",
+      "hints": [
+        "Stop and remove the my_webserver container",
+        "Check with: ss -tlnp | grep 8080"
+      ]
+    }
+  ]
+}

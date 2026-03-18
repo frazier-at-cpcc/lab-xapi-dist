@@ -1,0 +1,149 @@
+{
+  "version": "1.0",
+  "metadata": {
+    "slug": "netsecurity-ports",
+    "name": "SELinux Port Labeling",
+    "description": "Configure a web server to host content by using a nonstandard port",
+    "course": "rh134",
+    "chapter": "Chapter 14",
+    "estimated_time": "25 minutes",
+    "objectives": [
+      "Configure a web server to host content by using a nonstandard port"
+    ],
+    "prerequisites": [
+      "Basic understanding of SELinux concepts",
+      "Familiarity with firewall configuration",
+      "Understanding of Apache web server configuration"
+    ],
+    "tags": [
+      "selinux",
+      "ports",
+      "httpd",
+      "firewall",
+      "security",
+      "semanage"
+    ]
+  },
+  "environment": {
+    "hosts": [
+      {
+        "name": "servera",
+        "description": "Web server running on nonstandard port 82",
+        "ssh_user": "root"
+      }
+    ],
+    "variables": {}
+  },
+  "tasks": [
+    {
+      "id": "selinux-port-82",
+      "name": "Verify port 82 has http_port_t SELinux context",
+      "description": "SELinux must allow httpd to bind to port 82 by assigning the http_port_t context",
+      "points": 3,
+      "fatal": true,
+      "checks": [
+        {
+          "type": "command",
+          "host": "servera",
+          "command": "semanage port -l | grep -E '^http_port_t.*tcp.*82'",
+          "expected_exit_code": 0
+        }
+      ],
+      "success_message": "Port 82 has the correct http_port_t SELinux context",
+      "failure_message": "Port 82 does not have the http_port_t SELinux context",
+      "hints": [
+        "Assign the SELinux port type: sudo semanage port -a -t http_port_t -p tcp 82",
+        "Verify: semanage port -l | grep http_port_t",
+        "If port already exists with different type: sudo semanage port -m -t http_port_t -p tcp 82"
+      ]
+    },
+    {
+      "id": "httpd-running",
+      "name": "Verify httpd service is running",
+      "description": "The httpd service must be running to serve web content on port 82",
+      "points": 2,
+      "fatal": false,
+      "checks": [
+        {
+          "type": "service_running",
+          "host": "servera",
+          "service": "httpd"
+        }
+      ],
+      "success_message": "The httpd service is running",
+      "failure_message": "The httpd service is not running",
+      "hints": [
+        "Restart the service: sudo systemctl restart httpd",
+        "Check status: systemctl status httpd",
+        "Check for SELinux issues: sealert -a /var/log/audit/audit.log"
+      ]
+    },
+    {
+      "id": "port-82-listening",
+      "name": "Verify httpd is listening on port 82",
+      "description": "The web server should be listening on the nonstandard port 82",
+      "points": 2,
+      "fatal": false,
+      "checks": [
+        {
+          "type": "port_listening",
+          "host": "servera",
+          "port": 82,
+          "protocol": "tcp"
+        }
+      ],
+      "success_message": "Port 82 is listening for connections",
+      "failure_message": "Port 82 is not listening",
+      "hints": [
+        "Check listening ports: ss -tlnp | grep :82",
+        "Verify httpd config: grep Listen /etc/httpd/conf/httpd.conf",
+        "Restart httpd after SELinux changes: sudo systemctl restart httpd"
+      ]
+    },
+    {
+      "id": "firewall-port-82",
+      "name": "Verify port 82 is open in firewall",
+      "description": "The firewall must allow traffic on port 82/tcp for external access",
+      "points": 2,
+      "fatal": false,
+      "checks": [
+        {
+          "type": "firewall_port",
+          "host": "servera",
+          "port": "82/tcp",
+          "zone": "public",
+          "permanent": true
+        }
+      ],
+      "success_message": "Port 82/tcp is open in the firewall",
+      "failure_message": "Port 82/tcp is not open in the firewall",
+      "hints": [
+        "Open port 82: sudo firewall-cmd --permanent --add-port=82/tcp",
+        "Reload firewall: sudo firewall-cmd --reload",
+        "Verify: firewall-cmd --permanent --list-ports"
+      ]
+    },
+    {
+      "id": "web-content-accessible",
+      "name": "Verify web content is accessible on port 82",
+      "description": "The web server should serve content when accessed on port 82",
+      "points": 3,
+      "fatal": false,
+      "checks": [
+        {
+          "type": "command",
+          "host": "servera",
+          "command": "curl -s http://localhost:82",
+          "expected_stdout": "Hello"
+        }
+      ],
+      "success_message": "Web content is accessible on port 82",
+      "failure_message": "Web content is not accessible on port 82",
+      "hints": [
+        "Test locally: curl http://localhost:82",
+        "Check httpd status: systemctl status httpd",
+        "Check SELinux port context: semanage port -l | grep http_port_t"
+      ]
+    }
+  ]
+}

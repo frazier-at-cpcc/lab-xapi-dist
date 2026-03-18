@@ -1,0 +1,224 @@
+{
+  "version": "1.0",
+  "metadata": {
+    "slug": "image-server",
+    "name": "Install Red Hat Enterprise Linux by Using Image Mode",
+    "description": "Adjust a Kickstart file to use image mode and install RHEL 10 in image mode using Kickstart",
+    "course": "rh134",
+    "chapter": "Chapter 18",
+    "estimated_time": "45 minutes",
+    "objectives": [
+      "Adjust a Kickstart file to use image mode",
+      "Install Red Hat Enterprise Linux 10 in image mode by using Kickstart",
+      "Explore the differences between image mode and package mode"
+    ],
+    "prerequisites": [
+      "Completion of the Create Installable Images for Image Mode exercise",
+      "Understanding of Kickstart automation",
+      "Familiarity with image mode concepts"
+    ],
+    "tags": ["image-mode", "kickstart", "ostreecontainer", "bootc", "installation", "rhel10"]
+  },
+  "environment": {
+    "hosts": [
+      {
+        "name": "workstation",
+        "description": "Management workstation",
+        "ssh_user": "student"
+      },
+      {
+        "name": "servera",
+        "description": "HTTP server hosting Kickstart file",
+        "ssh_user": "student"
+      },
+      {
+        "name": "serverc",
+        "description": "Image mode target system",
+        "ssh_user": "student"
+      }
+    ],
+    "variables": {
+      "REGISTRY": "registry.lab.example.com:5000",
+      "IMAGE_NAME": "student/webserver-bootc"
+    }
+  },
+  "tasks": [
+    {
+      "id": "kickstart-ostreecontainer",
+      "name": "Verify Kickstart uses ostreecontainer directive",
+      "description": "The Kickstart file should use ostreecontainer instead of packages section",
+      "points": 2,
+      "fatal": true,
+      "checks": [
+        {
+          "type": "file_exists",
+          "host": "servera",
+          "path": "/home/student/RH304/labs/image-server/ks.cfg"
+        },
+        {
+          "type": "file_contains",
+          "host": "servera",
+          "path": "/home/student/RH304/labs/image-server/ks.cfg",
+          "pattern": "ostreecontainer\\s+--url=registry\\.lab\\.example\\.com:5000/student/webserver-bootc"
+        }
+      ],
+      "success_message": "Kickstart file correctly configured with ostreecontainer directive",
+      "failure_message": "Kickstart file missing or incorrect ostreecontainer directive",
+      "hints": [
+        "Add: ostreecontainer --url=registry.lab.example.com:5000/student/webserver-bootc",
+        "Remove the packages section if present",
+        "The ostreecontainer directive specifies the bootable container image"
+      ]
+    },
+    {
+      "id": "kickstart-no-packages",
+      "name": "Verify Kickstart has no packages section",
+      "description": "Image mode installations should not have a packages section",
+      "points": 1,
+      "checks": [
+        {
+          "type": "file_not_contains",
+          "host": "servera",
+          "path": "/home/student/RH304/labs/image-server/ks.cfg",
+          "pattern": "^%packages"
+        }
+      ],
+      "success_message": "Kickstart file correctly omits packages section",
+      "failure_message": "Kickstart file still contains packages section",
+      "hints": [
+        "Delete the %packages section from the Kickstart file",
+        "Image mode uses container images instead of package installations"
+      ]
+    },
+    {
+      "id": "kickstart-published",
+      "name": "Verify Kickstart file published to web server",
+      "description": "The Kickstart file should be available via HTTP on servera",
+      "points": 2,
+      "checks": [
+        {
+          "type": "file_exists",
+          "host": "servera",
+          "path": "/var/www/html/ks.cfg"
+        },
+        {
+          "type": "command",
+          "host": "workstation",
+          "command": "curl -s http://servera.lab.example.com/ks.cfg | grep -q 'ostreecontainer'",
+          "expected_exit_code": 0,
+          "timeout": 10
+        }
+      ],
+      "success_message": "Kickstart file accessible via HTTP",
+      "failure_message": "Kickstart file not accessible from web server",
+      "hints": [
+        "Copy file: sudo cp ~/RH304/labs/image-server/ks.cfg /var/www/html/",
+        "Verify: curl http://servera.lab.example.com/ks.cfg"
+      ]
+    },
+    {
+      "id": "serverc-image-mode",
+      "name": "Verify serverc is running in image mode",
+      "description": "The serverc machine should be booted into the image mode system",
+      "points": 3,
+      "checks": [
+        {
+          "type": "command",
+          "host": "serverc",
+          "command": "sudo bootc status 2>/dev/null | grep -q 'Booted image'",
+          "expected_exit_code": 0,
+          "timeout": 15
+        }
+      ],
+      "success_message": "serverc is running in image mode",
+      "failure_message": "serverc is not running in image mode",
+      "hints": [
+        "Complete the PXE boot installation process",
+        "Select 'Install RHEL 10' and add inst.ks=http://servera.lab.example.com/ks.cfg",
+        "After installation, boot from local disk"
+      ]
+    },
+    {
+      "id": "serverc-bootc-image",
+      "name": "Verify correct bootc image on serverc",
+      "description": "The serverc should be running the webserver-bootc image",
+      "points": 2,
+      "checks": [
+        {
+          "type": "command",
+          "host": "serverc",
+          "command": "sudo bootc status | grep -q 'registry.lab.example.com:5000/student/webserver-bootc'",
+          "expected_exit_code": 0,
+          "timeout": 15
+        }
+      ],
+      "success_message": "serverc running correct webserver-bootc image",
+      "failure_message": "serverc not running the expected container image",
+      "hints": [
+        "Run: sudo bootc status",
+        "The Booted image should show registry.lab.example.com:5000/student/webserver-bootc"
+      ]
+    },
+    {
+      "id": "serverc-readonly-root",
+      "name": "Verify root filesystem is read-only",
+      "description": "Image mode systems have an immutable root filesystem",
+      "points": 2,
+      "checks": [
+        {
+          "type": "command",
+          "host": "serverc",
+          "command": "touch /test.root 2>&1 | grep -q 'Read-only file system'",
+          "expected_exit_code": 0
+        }
+      ],
+      "success_message": "Root filesystem is correctly read-only",
+      "failure_message": "Root filesystem is not read-only as expected",
+      "hints": [
+        "In image mode, / and /usr are immutable",
+        "Try: sudo touch /test.root - should fail with 'Read-only file system'"
+      ]
+    },
+    {
+      "id": "serverc-motd-updated",
+      "name": "Verify /etc/motd was updated",
+      "description": "The /etc directory should be mutable in image mode",
+      "points": 1,
+      "checks": [
+        {
+          "type": "file_contains",
+          "host": "serverc",
+          "path": "/etc/motd",
+          "pattern": "This is image mode"
+        }
+      ],
+      "success_message": "/etc/motd correctly updated",
+      "failure_message": "/etc/motd not updated with expected content",
+      "hints": [
+        "Run: sudo bash -c 'echo \"This is image mode.\" > /etc/motd'",
+        "The /etc directory is mutable in image mode"
+      ]
+    },
+    {
+      "id": "serverc-webserver-accessible",
+      "name": "Verify web server accessible from workstation",
+      "description": "The httpd service on serverc should serve the expected content",
+      "points": 2,
+      "checks": [
+        {
+          "type": "command",
+          "host": "workstation",
+          "command": "curl -s http://serverc.lab.example.com | grep -q 'Hello image mode for RHEL!'",
+          "expected_exit_code": 0,
+          "timeout": 10
+        }
+      ],
+      "success_message": "Web server on serverc responding correctly",
+      "failure_message": "Web server not accessible or incorrect content",
+      "hints": [
+        "Run: curl http://serverc.lab.example.com",
+        "The httpd service should be enabled and started in the container image"
+      ]
+    }
+  ]
+}

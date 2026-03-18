@@ -1,0 +1,157 @@
+{
+  "version": "1.0",
+  "metadata": {
+    "slug": "nfsclient-nfs",
+    "name": "Mount NFS File Systems",
+    "description": "Manually and persistently mount NFS export directories",
+    "course": "rh134",
+    "chapter": "Chapter 15",
+    "estimated_time": "25 minutes",
+    "objectives": [
+      "Manually mount the NFS export directory",
+      "Mount the NFS export directory persistently"
+    ],
+    "prerequisites": [
+      "Basic understanding of mount commands",
+      "Familiarity with /etc/fstab file format",
+      "Understanding of NFS concepts"
+    ],
+    "tags": [
+      "nfs",
+      "mount",
+      "fstab",
+      "network",
+      "storage",
+      "filesystem"
+    ]
+  },
+  "environment": {
+    "hosts": [
+      {
+        "name": "servera",
+        "description": "NFS client mounting shares from serverb",
+        "ssh_user": "root"
+      },
+      {
+        "name": "serverb",
+        "description": "NFS server exporting /shares/public",
+        "ssh_user": "root"
+      }
+    ],
+    "variables": {}
+  },
+  "tasks": [
+    {
+      "id": "public-directory-exists",
+      "name": "Verify /public mount point exists",
+      "description": "The /public directory must exist as the mount point for the NFS share",
+      "points": 1,
+      "fatal": true,
+      "checks": [
+        {
+          "type": "directory_exists",
+          "host": "servera",
+          "path": "/public"
+        }
+      ],
+      "success_message": "The /public directory exists",
+      "failure_message": "The /public directory does not exist",
+      "hints": [
+        "Create the directory: sudo mkdir /public"
+      ]
+    },
+    {
+      "id": "fstab-entry-exists",
+      "name": "Verify NFS entry in /etc/fstab",
+      "description": "The /etc/fstab file must contain an entry for the NFS mount",
+      "points": 2,
+      "fatal": false,
+      "checks": [
+        {
+          "type": "file_contains",
+          "host": "servera",
+          "path": "/etc/fstab",
+          "pattern": "serverb:/shares/public\\s+/public\\s+nfs"
+        }
+      ],
+      "success_message": "The NFS entry exists in /etc/fstab",
+      "failure_message": "The NFS entry is missing or incorrect in /etc/fstab",
+      "hints": [
+        "Add to /etc/fstab: serverb:/shares/public /public nfs rw,sync 0 0",
+        "Verify syntax: cat /etc/fstab | grep serverb"
+      ]
+    },
+    {
+      "id": "nfs-mounted",
+      "name": "Verify NFS share is mounted on /public",
+      "description": "The serverb:/shares/public NFS share should be mounted on /public",
+      "points": 2,
+      "fatal": false,
+      "checks": [
+        {
+          "type": "mount_exists",
+          "host": "servera",
+          "mountpoint": "/public",
+          "source": "serverb:/shares/public",
+          "fstype": "nfs4"
+        }
+      ],
+      "success_message": "The NFS share is mounted on /public",
+      "failure_message": "The NFS share is not mounted on /public",
+      "hints": [
+        "Mount the share: sudo mount /public",
+        "Or manually: sudo mount -t nfs serverb:/shares/public /public",
+        "Reload systemd: sudo systemctl daemon-reload"
+      ]
+    },
+    {
+      "id": "nfs-content-accessible",
+      "name": "Verify NFS content is accessible",
+      "description": "The hello file from the NFS export should be readable",
+      "points": 2,
+      "fatal": false,
+      "checks": [
+        {
+          "type": "file_exists",
+          "host": "servera",
+          "path": "/public/hello"
+        },
+        {
+          "type": "command",
+          "host": "servera",
+          "command": "cat /public/hello",
+          "expected_stdout": "Hello, World!"
+        }
+      ],
+      "success_message": "NFS content is accessible",
+      "failure_message": "NFS content is not accessible",
+      "hints": [
+        "List contents: ls -l /public",
+        "Read file: cat /public/hello",
+        "Check mount: mount | grep public"
+      ]
+    },
+    {
+      "id": "mount-persistent",
+      "name": "Verify mount persists after reload",
+      "description": "The mount should be configured to persist across reboots via /etc/fstab",
+      "points": 3,
+      "fatal": false,
+      "checks": [
+        {
+          "type": "command",
+          "host": "servera",
+          "command": "findmnt --fstab /public",
+          "expected_exit_code": 0
+        }
+      ],
+      "success_message": "The mount is configured to persist across reboots",
+      "failure_message": "The mount is not configured to persist across reboots",
+      "hints": [
+        "Check fstab entry: grep /public /etc/fstab",
+        "Test mount from fstab: sudo umount /public && sudo mount /public",
+        "Reload systemd: sudo systemctl daemon-reload"
+      ]
+    }
+  ]
+}

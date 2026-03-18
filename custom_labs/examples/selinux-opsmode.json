@@ -1,0 +1,100 @@
+{
+  "version": "1.0",
+  "metadata": {
+    "slug": "selinux-opsmode",
+    "name": "Operate SELinux",
+    "description": "View and set the current SELinux mode",
+    "course": "rh134",
+    "chapter": "Chapter 6",
+    "estimated_time": "15 minutes",
+    "objectives": [
+      "View and set the current SELinux mode"
+    ],
+    "prerequisites": [
+      "Access to servera machine",
+      "Root access via sudo"
+    ],
+    "tags": [
+      "selinux",
+      "getenforce",
+      "setenforce",
+      "enforcing",
+      "permissive",
+      "security"
+    ]
+  },
+  "environment": {
+    "hosts": [
+      {
+        "name": "servera",
+        "description": "Server for SELinux mode configuration",
+        "ssh_user": "root"
+      }
+    ],
+    "variables": {}
+  },
+  "tasks": [
+    {
+      "id": "selinux-enforcing-runtime",
+      "name": "Verify SELinux is in enforcing mode (runtime)",
+      "description": "SELinux should be in enforcing mode as the current runtime setting",
+      "points": 2,
+      "fatal": false,
+      "checks": [
+        {
+          "type": "command",
+          "host": "servera",
+          "command": "getenforce | grep -q '^Enforcing$'",
+          "expected_exit_code": 0
+        }
+      ],
+      "success_message": "SELinux is in enforcing mode",
+      "failure_message": "SELinux is not in enforcing mode",
+      "hints": [
+        "Set enforcing mode: sudo setenforce 1",
+        "Check current mode: getenforce"
+      ]
+    },
+    {
+      "id": "selinux-config-enforcing",
+      "name": "Verify /etc/selinux/config is set to enforcing",
+      "description": "The SELinux configuration file should have SELINUX=enforcing for persistence",
+      "points": 2,
+      "fatal": false,
+      "checks": [
+        {
+          "type": "file_contains",
+          "host": "servera",
+          "path": "/etc/selinux/config",
+          "pattern": "^SELINUX=enforcing"
+        }
+      ],
+      "success_message": "SELinux config file is set to enforcing",
+      "failure_message": "SELinux config file is not set to enforcing",
+      "hints": [
+        "Edit /etc/selinux/config and set SELINUX=enforcing",
+        "Use: sudo vim /etc/selinux/config"
+      ]
+    },
+    {
+      "id": "selinux-not-disabled",
+      "name": "Verify SELinux is not disabled in config",
+      "description": "The SELinux configuration should not be set to disabled",
+      "points": 1,
+      "fatal": false,
+      "checks": [
+        {
+          "type": "file_not_contains",
+          "host": "servera",
+          "path": "/etc/selinux/config",
+          "pattern": "^SELINUX=disabled"
+        }
+      ],
+      "success_message": "SELinux is not set to disabled",
+      "failure_message": "SELinux is incorrectly set to disabled in config",
+      "hints": [
+        "Edit /etc/selinux/config and change SELINUX=disabled to SELINUX=enforcing"
+      ]
+    }
+  ]
+}

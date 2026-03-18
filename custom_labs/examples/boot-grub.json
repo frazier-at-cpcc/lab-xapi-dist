@@ -1,0 +1,127 @@
+{
+  "version": "1.0",
+  "metadata": {
+    "slug": "boot-grub",
+    "name": "Manage the Boot Loader and Kernel Command Line",
+    "description": "Reconfigure the boot loader to select different kernels and modify kernel command-line arguments using grubby",
+    "course": "rh134",
+    "chapter": "Chapter 12",
+    "estimated_time": "20 minutes",
+    "objectives": [
+      "Reboot the system and examine the GRUB2 menu",
+      "View the current boot-loader configuration from the command line",
+      "Reconfigure the boot loader to select a different kernel as the default"
+    ],
+    "prerequisites": [
+      "Basic understanding of the Linux boot process",
+      "Familiarity with systemd and systemctl commands"
+    ],
+    "tags": [
+      "grub2",
+      "boot-loader",
+      "grubby",
+      "kernel",
+      "boot-process",
+      "rhel10"
+    ]
+  },
+  "environment": {
+    "hosts": [
+      {
+        "name": "servera",
+        "description": "Target server for boot loader configuration",
+        "ssh_user": "root"
+      }
+    ],
+    "variables": {}
+  },
+  "tasks": [
+    {
+      "id": "grubby-accessible",
+      "name": "Verify grubby command is available",
+      "description": "The grubby utility should be installed and accessible",
+      "points": 1,
+      "fatal": true,
+      "checks": [
+        {
+          "type": "command",
+          "host": "servera",
+          "command": "which grubby",
+          "expected_exit_code": 0,
+          "description": "Check grubby is available"
+        }
+      ],
+      "success_message": "grubby utility is available",
+      "failure_message": "grubby utility is not found",
+      "hints": [
+        "The grubby package should be installed by default on RHEL systems"
+      ]
+    },
+    {
+      "id": "default-kernel-index",
+      "name": "Verify default kernel is at index 1",
+      "description": "The default kernel should be reverted back to index 1 (the most recent kernel)",
+      "points": 2,
+      "fatal": false,
+      "checks": [
+        {
+          "type": "command",
+          "host": "servera",
+          "command": "grubby --default-index",
+          "expected_stdout": "^1$",
+          "description": "Check that default kernel index is 1"
+        }
+      ],
+      "success_message": "Default kernel is correctly set to index 1",
+      "failure_message": "Default kernel is not at index 1",
+      "hints": [
+        "Use 'grubby --set-default-index 1' to set the default kernel to index 1",
+        "Verify with 'grubby --default-index' to check the current default"
+      ]
+    },
+    {
+      "id": "kernel-args-reverted",
+      "name": "Verify rhgb quiet arguments removed from older kernel",
+      "description": "The rhgb quiet arguments should be removed from the kernel at index 0",
+      "points": 2,
+      "fatal": false,
+      "checks": [
+        {
+          "type": "command",
+          "host": "servera",
+          "command": "grubby --info 0 | grep -E '^args=' | grep -v 'rhgb quiet'",
+          "expected_exit_code": 0,
+          "description": "Check that rhgb quiet is not in kernel 0 args"
+        }
+      ],
+      "success_message": "Kernel arguments correctly reverted (rhgb quiet removed)",
+      "failure_message": "The rhgb quiet arguments are still present on kernel at index 0",
+      "hints": [
+        "Use 'grubby --update-kernel /boot/vmlinuz-<version> --remove-args=\"rhgb quiet\"' to remove the arguments",
+        "Check current args with 'grubby --info 0'"
+      ]
+    },
+    {
+      "id": "boot-loader-entries-exist",
+      "name": "Verify boot loader entries exist",
+      "description": "Boot loader entry files should exist in /boot/loader/entries/",
+      "points": 1,
+      "fatal": false,
+      "checks": [
+        {
+          "type": "command",
+          "host": "servera",
+          "command": "ls /boot/loader/entries/*.conf 2>/dev/null | wc -l",
+          "expected_stdout": "[1-9]",
+          "description": "Check that at least one boot loader entry exists"
+        }
+      ],
+      "success_message": "Boot loader entries are present",
+      "failure_message": "No boot loader entries found in /boot/loader/entries/",
+      "hints": [
+        "Boot loader entries should be in /boot/loader/entries/ directory",
+        "Each kernel should have a corresponding .conf file"
+      ]
+    }
+  ]
+}

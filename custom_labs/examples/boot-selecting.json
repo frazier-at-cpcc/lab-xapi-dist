@@ -1,0 +1,113 @@
+{
+  "version": "1.0",
+  "metadata": {
+    "slug": "boot-selecting",
+    "name": "Explore the Boot Process and Select a Boot Target",
+    "description": "Update the system default target and use a temporary target from the boot loader",
+    "course": "rh134",
+    "chapter": "Chapter 12",
+    "estimated_time": "25 minutes",
+    "objectives": [
+      "Update the system default target and use a temporary target from the boot loader"
+    ],
+    "prerequisites": [
+      "Understanding of systemd targets",
+      "Familiarity with GRUB2 boot loader"
+    ],
+    "tags": ["systemd", "boot-target", "grub2", "rescue-mode", "multi-user", "graphical"]
+  },
+  "environment": {
+    "hosts": [
+      {
+        "name": "workstation",
+        "description": "Workstation for boot target configuration",
+        "ssh_user": "student"
+      }
+    ],
+    "variables": {}
+  },
+  "tasks": [
+    {
+      "id": "default-target-graphical",
+      "name": "Verify default target is graphical.target",
+      "description": "The system default target should be set back to graphical.target after the exercise",
+      "points": 3,
+      "fatal": false,
+      "checks": [
+        {
+          "type": "command",
+          "host": "workstation",
+          "command": "systemctl get-default",
+          "expected_stdout": "graphical\\.target",
+          "description": "Check that default target is graphical.target"
+        }
+      ],
+      "success_message": "Default target is correctly set to graphical.target",
+      "failure_message": "Default target is not graphical.target",
+      "hints": [
+        "Use 'sudo systemctl set-default graphical.target' to set the default target",
+        "Verify with 'systemctl get-default'"
+      ]
+    },
+    {
+      "id": "default-target-symlink",
+      "name": "Verify default.target symlink exists",
+      "description": "The /etc/systemd/system/default.target symlink should point to graphical.target",
+      "points": 2,
+      "fatal": false,
+      "checks": [
+        {
+          "type": "command",
+          "host": "workstation",
+          "command": "readlink /etc/systemd/system/default.target",
+          "expected_stdout": "graphical\\.target",
+          "description": "Check default.target symlink points to graphical.target"
+        }
+      ],
+      "success_message": "default.target symlink correctly configured",
+      "failure_message": "default.target symlink does not point to graphical.target",
+      "hints": [
+        "The symlink should be at /etc/systemd/system/default.target",
+        "It should point to /usr/lib/systemd/system/graphical.target"
+      ]
+    },
+    {
+      "id": "graphical-target-exists",
+      "name": "Verify graphical.target unit exists",
+      "description": "The graphical.target systemd unit should exist on the system",
+      "points": 1,
+      "fatal": true,
+      "checks": [
+        {
+          "type": "file_exists",
+          "host": "workstation",
+          "path": "/usr/lib/systemd/system/graphical.target"
+        }
+      ],
+      "success_message": "graphical.target unit file exists",
+      "failure_message": "graphical.target unit file not found",
+      "hints": [
+        "The graphical.target should be in /usr/lib/systemd/system/"
+      ]
+    },
+    {
+      "id": "multi-user-target-exists",
+      "name": "Verify multi-user.target unit exists",
+      "description": "The multi-user.target systemd unit should exist on the system",
+      "points": 1,
+      "fatal": false,
+      "checks": [
+        {
+          "type": "file_exists",
+          "host": "workstation",
+          "path": "/usr/lib/systemd/system/multi-user.target"
+        }
+      ],
+      "success_message": "multi-user.target unit file exists",
+      "failure_message": "multi-user.target unit file not found",
+      "hints": [
+        "The multi-user.target should be in /usr/lib/systemd/system/"
+      ]
+    }
+  ]
+}

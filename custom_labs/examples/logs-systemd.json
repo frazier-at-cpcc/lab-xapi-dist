@@ -1,0 +1,58 @@
+{
+  "version": "1.0",
+  "metadata": {
+    "slug": "logs-systemd",
+    "name": "Find and Interpret System Journal Log Entries",
+    "description": "Find log entries of the system journal by using different criteria to review the system status",
+    "course": "rh134",
+    "chapter": "Chapter 5",
+    "estimated_time": "20 minutes",
+    "objectives": [
+      "Search the system journal for entries to record events based on different criteria"
+    ],
+    "prerequisites": [
+      "Basic understanding of journalctl",
+      "Familiarity with systemd journal"
+    ],
+    "tags": [
+      "journalctl",
+      "systemd",
+      "journal",
+      "logging",
+      "troubleshooting"
+    ]
+  },
+  "environment": {
+    "hosts": [
+      {
+        "name": "servera",
+        "description": "Target server for journal queries",
+        "ssh_user": "student"
+      }
+    ],
+    "variables": {}
+  },
+  "tasks": [
+    {
+      "id": "journalctl-available",
+      "name": "Verify journalctl is accessible",
+      "description": "The journalctl command should be available for querying system logs",
+      "points": 1,
+      "fatal": false,
+      "checks": [
+        {
+          "type": "command",
+          "host": "servera",
+          "command": "journalctl --no-pager -n 1 2>/dev/null | grep -q .",
+          "expected_exit_code": 0
+        }
+      ],
+      "success_message": "journalctl is working and system journal is accessible",
+      "failure_message": "journalctl is not accessible",
+      "hints": [
+        "This is an observational exercise - verify you can run journalctl commands",
+        "Try: journalctl _PID=1 to view systemd entries"
+      ]
+    }
+  ]
+}

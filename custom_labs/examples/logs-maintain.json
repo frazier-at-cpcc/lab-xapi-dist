@@ -1,0 +1,173 @@
+{
+  "version": "1.0",
+  "metadata": {
+    "slug": "logs-maintain",
+    "name": "Maintain Synchronized Time",
+    "description": "Change the time zone on a server and configure NTP time synchronization with chronyd",
+    "course": "rh134",
+    "chapter": "Chapter 5",
+    "estimated_time": "20 minutes",
+    "objectives": [
+      "Change the time zone on a server",
+      "Configure the server to synchronize its time with an NTP time source"
+    ],
+    "prerequisites": [
+      "Basic understanding of system time and time zones",
+      "Familiarity with timedatectl and chronyc commands"
+    ],
+    "tags": [
+      "time",
+      "timezone",
+      "ntp",
+      "chronyd",
+      "timedatectl",
+      "chronyc"
+    ]
+  },
+  "environment": {
+    "hosts": [
+      {
+        "name": "workstation",
+        "description": "Management workstation",
+        "ssh_user": "student"
+      },
+      {
+        "name": "servera",
+        "description": "Target server for time configuration",
+        "ssh_user": "root"
+      }
+    ],
+    "variables": {
+      "TIMEZONE": "America/Port-au-Prince",
+      "NTP_SERVER": "classroom.example.com"
+    }
+  },
+  "tasks": [
+    {
+      "id": "timezone-set",
+      "name": "Verify time zone set to America/Port-au-Prince",
+      "description": "The servera time zone should be configured for Haiti",
+      "points": 2,
+      "fatal": true,
+      "checks": [
+        {
+          "type": "command",
+          "host": "servera",
+          "command": "timedatectl show --property=Timezone --value | grep -q 'America/Port-au-Prince'",
+          "expected_exit_code": 0
+        }
+      ],
+      "success_message": "Time zone correctly set to America/Port-au-Prince",
+      "failure_message": "Time zone not set to America/Port-au-Prince",
+      "hints": [
+        "Use: timedatectl set-timezone America/Port-au-Prince",
+        "Find time zones with: tzselect or timedatectl list-timezones",
+        "Verify with: timedatectl"
+      ]
+    },
+    {
+      "id": "chrony-conf-ntp-server",
+      "name": "Verify chrony configured with classroom NTP server",
+      "description": "The /etc/chrony.conf should reference classroom.example.com as NTP source",
+      "points": 2,
+      "checks": [
+        {
+          "type": "file_contains",
+          "host": "servera",
+          "path": "/etc/chrony.conf",
+          "pattern": "server\\s+classroom\\.example\\.com.*iburst"
+        }
+      ],
+      "success_message": "chrony configured with classroom.example.com NTP server",
+      "failure_message": "chrony.conf missing classroom.example.com NTP server configuration",
+      "hints": [
+        "Add to /etc/chrony.conf: server classroom.example.com iburst",
+        "The iburst option speeds up initial synchronization",
+        "Edit: sudo vi /etc/chrony.conf"
+      ]
+    },
+    {
+      "id": "ntp-enabled",
+      "name": "Verify NTP synchronization is enabled",
+      "description": "Time synchronization should be enabled via timedatectl",
+      "points": 2,
+      "checks": [
+        {
+          "type": "command",
+          "host": "servera",
+          "command": "timedatectl show --property=NTP --value | grep -q 'yes'",
+          "expected_exit_code": 0
+        }
+      ],
+      "success_message": "NTP synchronization is enabled",
+      "failure_message": "NTP synchronization is not enabled",
+      "hints": [
+        "Enable NTP: timedatectl set-ntp true",
+        "Verify: timedatectl (check NTP service: active)"
+      ]
+    },
+    {
+      "id": "chronyd-running",
+      "name": "Verify chronyd service is running",
+      "description": "The chronyd service should be active and running",
+      "points": 1,
+      "checks": [
+        {
+          "type": "service_running",
+          "host": "servera",
+          "service": "chronyd"
+        }
+      ],
+      "success_message": "chronyd service is running",
+      "failure_message": "chronyd service is not running",
+      "hints": [
+        "Start service: sudo systemctl start chronyd",
+        "Check status: systemctl status chronyd"
+      ]
+    },
+    {
+      "id": "clock-synchronized",
+      "name": "Verify system clock is synchronized",
+      "description": "The system clock should be synchronized with the NTP server",
+      "points": 2,
+      "checks": [
+        {
+          "type": "command",
+          "host": "servera",
+          "command": "timedatectl show --property=NTPSynchronized --value | grep -q 'yes'",
+          "expected_exit_code": 0
+        }
+      ],
+      "success_message": "System clock is synchronized",
+      "failure_message": "System clock is not synchronized",
+      "hints": [
+        "Wait a few seconds after enabling NTP for synchronization",
+        "Verify: timedatectl (check System clock synchronized: yes)",
+        "Check sources: chronyc sources -v"
+      ]
+    },
+    {
+      "id": "ntp-source-active",
+      "name": "Verify classroom.example.com is active NTP source",
+      "description": "The chronyc sources should show classroom.example.com as the active time source",
+      "points": 3,
+      "checks": [
+        {
+          "type": "command",
+          "host": "servera",
+          "command": "chronyc sources 2>/dev/null | grep -E '^\\^\\*.*classroom' | grep -q classroom",
+          "expected_exit_code": 0,
+          "timeout": 15
+        }
+      ],
+      "success_message": "classroom.example.com is the active NTP source",
+      "failure_message": "classroom.example.com is not the active NTP source",
+      "hints": [
+        "Run: chronyc sources -v",
+        "Look for ^* prefix indicating the active source",
+        "The asterisk (*) shows successful synchronization",
+        "If not synchronized, restart chronyd: sudo systemctl restart chronyd"
+      ]
+    }
+  ]
+}

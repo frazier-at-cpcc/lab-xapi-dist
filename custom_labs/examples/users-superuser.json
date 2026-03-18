@@ -1,0 +1,142 @@
+{
+  "version": "1.0",
+  "metadata": {
+    "slug": "users-superuser",
+    "name": "Gain Superuser Access",
+    "description": "Switch to the superuser account and grant other users superuser access using Sudo",
+    "course": "rh124",
+    "chapter": "Chapter 5",
+    "estimated_time": "20 minutes",
+    "objectives": [
+      "Use Sudo to switch to the root user",
+      "Access interactive shell as root without knowing root password",
+      "Verify behavior of su command with and without login shell",
+      "Use Sudo privileges as a regular user to manage restricted files"
+    ],
+    "prerequisites": [
+      "Access to servera machine",
+      "operator1 user account"
+    ],
+    "tags": ["sudo", "su", "root", "superuser", "privileges"]
+  },
+  "environment": {
+    "hosts": [
+      {
+        "name": "servera",
+        "description": "Server for superuser practice",
+        "ssh_user": "student"
+      }
+    ],
+    "variables": {
+      "SUDOERS_FILE": "/etc/sudoers.d/operator1"
+    }
+  },
+  "tasks": [
+    {
+      "id": "student-in-wheel",
+      "name": "Verify student user is in wheel group",
+      "description": "The student user must be in the wheel group for sudo access",
+      "points": 1,
+      "fatal": true,
+      "checks": [
+        {
+          "type": "user_in_group",
+          "host": "servera",
+          "username": "student",
+          "group": "wheel"
+        }
+      ],
+      "success_message": "student user is in wheel group",
+      "failure_message": "student user is not in wheel group",
+      "hints": [
+        "Add to wheel group: sudo usermod -aG wheel student"
+      ]
+    },
+    {
+      "id": "operator1-exists",
+      "name": "Verify operator1 user exists",
+      "description": "The operator1 user account must exist",
+      "points": 1,
+      "checks": [
+        {
+          "type": "user_exists",
+          "host": "servera",
+          "username": "operator1"
+        }
+      ],
+      "success_message": "operator1 user exists",
+      "failure_message": "operator1 user not found",
+      "hints": [
+        "Create user: sudo useradd operator1",
+        "Set password: sudo passwd operator1"
+      ]
+    },
+    {
+      "id": "operator1-sudoers",
+      "name": "Verify operator1 sudoers configuration",
+      "description": "operator1 must have sudo privileges defined in /etc/sudoers.d/operator1",
+      "points": 2,
+      "checks": [
+        {
+          "type": "file_exists",
+          "host": "servera",
+          "path": "${SUDOERS_FILE}",
+          "user": "root"
+        },
+        {
+          "type": "command",
+          "host": "servera",
+          "user": "root",
+          "command": "grep -q 'operator1.*ALL=(ALL).*ALL' /etc/sudoers.d/operator1",
+          "expected_exit_code": 0
+        }
+      ],
+      "success_message": "operator1 has full sudo privileges",
+      "failure_message": "operator1 sudoers configuration missing or incorrect",
+      "hints": [
+        "Create file: sudo visudo -f /etc/sudoers.d/operator1",
+        "Add line: operator1 ALL=(ALL) ALL"
+      ]
+    },
+    {
+      "id": "sudoers-permissions",
+      "name": "Verify sudoers file has correct permissions",
+      "description": "The sudoers file must have mode 0440 or 0400",
+      "points": 1,
+      "checks": [
+        {
+          "type": "command",
+          "host": "servera",
+          "user": "root",
+          "command": "stat -c '%a' /etc/sudoers.d/operator1 | grep -qE '^4[04]0$'",
+          "expected_exit_code": 0
+        }
+      ],
+      "success_message": "sudoers file has correct permissions",
+      "failure_message": "sudoers file permissions incorrect (should be 0440 or 0400)",
+      "hints": [
+        "Fix permissions: sudo chmod 0440 /etc/sudoers.d/operator1"
+      ]
+    },
+    {
+      "id": "operator1-can-sudo",
+      "name": "Verify operator1 can use sudo",
+      "description": "operator1 should be able to run commands with sudo",
+      "points": 1,
+      "checks": [
+        {
+          "type": "command",
+          "host": "servera",
+          "user": "root",
+          "command": "sudo -ll -U operator1 2>&1 | grep -q 'ALL'",
+          "expected_exit_code": 0
+        }
+      ],
+      "success_message": "operator1 can use sudo",
+      "failure_message": "operator1 cannot use sudo",
+      "hints": [
+        "Ensure /etc/sudoers.d/operator1 contains: operator1 ALL=(ALL) ALL"
+      ]
+    }
+  ]
+}

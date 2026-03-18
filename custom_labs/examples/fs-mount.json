@@ -1,0 +1,137 @@
+{
+  "version": "1.0",
+  "metadata": {
+    "slug": "fs-mount",
+    "name": "Mount and Unmount a File System",
+    "description": "Mount and unmount a file system that is on removable media",
+    "course": "rh124",
+    "chapter": "Chapter 8",
+    "estimated_time": "15 minutes",
+    "objectives": [
+      "Identify and mount a new file system at a specified mount point",
+      "Create directories and files on mounted file systems",
+      "Unmount the file system properly"
+    ],
+    "prerequisites": [
+      "Access to servera machine",
+      "Root access via sudo",
+      "/dev/sdb1 partition with XFS filesystem exists"
+    ],
+    "tags": ["mount", "umount", "filesystem", "uuid", "xfs", "partition"]
+  },
+  "environment": {
+    "hosts": [
+      {
+        "name": "servera",
+        "description": "Server for filesystem mounting practice",
+        "ssh_user": "student"
+      }
+    ],
+    "variables": {
+      "MOUNT_POINT": "/mnt/part1",
+      "DEVICE": "/dev/sdb1",
+      "TEST_DIR": "/mnt/part1/testdir",
+      "TEST_FILE": "/mnt/part1/testdir/newmount"
+    }
+  },
+  "tasks": [
+    {
+      "id": "partition-exists",
+      "name": "Verify /dev/sdb1 partition exists",
+      "description": "The /dev/sdb1 partition must exist with a filesystem",
+      "points": 1,
+      "fatal": true,
+      "checks": [
+        {
+          "type": "command",
+          "host": "servera",
+          "command": "lsblk /dev/sdb1 2>/dev/null",
+          "expected_exit_code": 0
+        }
+      ],
+      "success_message": "/dev/sdb1 partition exists",
+      "failure_message": "/dev/sdb1 partition not found - run 'lab start fs-mount'",
+      "hints": [
+        "Run 'lab start fs-mount' to create the partition"
+      ]
+    },
+    {
+      "id": "mount-point-exists",
+      "name": "Verify /mnt/part1 mount point exists",
+      "description": "The mount point directory should exist",
+      "points": 1,
+      "checks": [
+        {
+          "type": "directory_exists",
+          "host": "servera",
+          "path": "${MOUNT_POINT}"
+        }
+      ],
+      "success_message": "/mnt/part1 mount point directory exists",
+      "failure_message": "/mnt/part1 directory not found",
+      "hints": [
+        "Create mount point: sudo mkdir /mnt/part1"
+      ]
+    },
+    {
+      "id": "testdir-created",
+      "name": "Verify testdir was created on filesystem",
+      "description": "The testdir directory should exist on the /dev/sdb1 filesystem",
+      "points": 2,
+      "checks": [
+        {
+          "type": "command",
+          "host": "servera",
+          "user": "root",
+          "command": "mount /dev/sdb1 /mnt/part1 2>/dev/null; test -d /mnt/part1/testdir; rc=$?; umount /mnt/part1 2>/dev/null; exit $rc",
+          "expected_exit_code": 0
+        }
+      ],
+      "success_message": "testdir directory exists on /dev/sdb1 filesystem",
+      "failure_message": "testdir directory not found on filesystem",
+      "hints": [
+        "Mount the filesystem and create: mkdir /mnt/part1/testdir"
+      ]
+    },
+    {
+      "id": "newmount-file-created",
+      "name": "Verify newmount file was created",
+      "description": "The testdir/newmount file should exist on the filesystem",
+      "points": 2,
+      "checks": [
+        {
+          "type": "command",
+          "host": "servera",
+          "user": "root",
+          "command": "mount /dev/sdb1 /mnt/part1 2>/dev/null; test -f /mnt/part1/testdir/newmount; rc=$?; umount /mnt/part1 2>/dev/null; exit $rc",
+          "expected_exit_code": 0
+        }
+      ],
+      "success_message": "testdir/newmount file exists on filesystem",
+      "failure_message": "testdir/newmount file not found",
+      "hints": [
+        "Create file: touch /mnt/part1/testdir/newmount"
+      ]
+    },
+    {
+      "id": "filesystem-unmounted",
+      "name": "Verify filesystem is unmounted",
+      "description": "The /dev/sdb1 filesystem should be unmounted (final state)",
+      "points": 2,
+      "checks": [
+        {
+          "type": "command",
+          "host": "servera",
+          "command": "! mount | grep -q '/dev/sdb1'",
+          "expected_exit_code": 0
+        }
+      ],
+      "success_message": "/dev/sdb1 is unmounted (correct final state)",
+      "failure_message": "/dev/sdb1 is still mounted - should be unmounted",
+      "hints": [
+        "Change to another directory first: cd",
+        "Unmount: sudo umount /mnt/part1"
+      ]
+    }
+  ]
+}

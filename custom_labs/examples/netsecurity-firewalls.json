@@ -1,0 +1,207 @@
+{
+  "version": "1.0",
+  "metadata": {
+    "slug": "netsecurity-firewalls",
+    "name": "Manage a Server Firewall",
+    "description": "Configure firewall rules to control access to services",
+    "course": "rh134",
+    "chapter": "Chapter 14",
+    "estimated_time": "20 minutes",
+    "objectives": [
+      "Configure firewall rules to control access to services"
+    ],
+    "prerequisites": [
+      "Basic understanding of network services",
+      "Familiarity with systemctl commands"
+    ],
+    "tags": [
+      "firewall",
+      "firewalld",
+      "https",
+      "httpd",
+      "security",
+      "mod_ssl"
+    ]
+  },
+  "environment": {
+    "hosts": [
+      {
+        "name": "servera",
+        "description": "Web server with firewall configuration",
+        "ssh_user": "root"
+      }
+    ],
+    "variables": {}
+  },
+  "tasks": [
+    {
+      "id": "httpd-installed",
+      "name": "Verify httpd package is installed",
+      "description": "The httpd package provides the Apache web server",
+      "points": 1,
+      "fatal": true,
+      "checks": [
+        {
+          "type": "package_installed",
+          "host": "servera",
+          "package": "httpd"
+        }
+      ],
+      "success_message": "The httpd package is installed",
+      "failure_message": "The httpd package is not installed",
+      "hints": [
+        "Install the httpd package: sudo dnf install httpd"
+      ]
+    },
+    {
+      "id": "mod-ssl-installed",
+      "name": "Verify mod_ssl package is installed",
+      "description": "The mod_ssl package enables SSL/TLS support for Apache",
+      "points": 1,
+      "fatal": false,
+      "checks": [
+        {
+          "type": "package_installed",
+          "host": "servera",
+          "package": "mod_ssl"
+        }
+      ],
+      "success_message": "The mod_ssl package is installed",
+      "failure_message": "The mod_ssl package is not installed",
+      "hints": [
+        "Install the mod_ssl package: sudo dnf install mod_ssl"
+      ]
+    },
+    {
+      "id": "index-html-exists",
+      "name": "Verify index.html exists with correct content",
+      "description": "The web server should serve custom content from /var/www/html/index.html",
+      "points": 2,
+      "fatal": false,
+      "checks": [
+        {
+          "type": "file_exists",
+          "host": "servera",
+          "path": "/var/www/html/index.html"
+        },
+        {
+          "type": "file_contains",
+          "host": "servera",
+          "path": "/var/www/html/index.html",
+          "pattern": "I am servera"
+        }
+      ],
+      "success_message": "The index.html file exists with correct content",
+      "failure_message": "The index.html file is missing or has incorrect content",
+      "hints": [
+        "Create the file: echo 'I am servera.' > /var/www/html/index.html",
+        "Verify content: cat /var/www/html/index.html"
+      ]
+    },
+    {
+      "id": "httpd-running",
+      "name": "Verify httpd service is running",
+      "description": "The httpd service must be active to serve web content",
+      "points": 2,
+      "fatal": false,
+      "checks": [
+        {
+          "type": "service_running",
+          "host": "servera",
+          "service": "httpd"
+        }
+      ],
+      "success_message": "The httpd service is running",
+      "failure_message": "The httpd service is not running",
+      "hints": [
+        "Start the service: sudo systemctl start httpd",
+        "Check status: systemctl status httpd"
+      ]
+    },
+    {
+      "id": "httpd-enabled",
+      "name": "Verify httpd service is enabled at boot",
+      "description": "The httpd service should start automatically at boot",
+      "points": 1,
+      "fatal": false,
+      "checks": [
+        {
+          "type": "service_enabled",
+          "host": "servera",
+          "service": "httpd"
+        }
+      ],
+      "success_message": "The httpd service is enabled at boot",
+      "failure_message": "The httpd service is not enabled at boot",
+      "hints": [
+        "Enable the service: sudo systemctl enable httpd",
+        "Or enable and start: sudo systemctl enable --now httpd"
+      ]
+    },
+    {
+      "id": "firewalld-running",
+      "name": "Verify firewalld service is running",
+      "description": "The firewalld service must be running to manage firewall rules",
+      "points": 1,
+      "fatal": false,
+      "checks": [
+        {
+          "type": "service_running",
+          "host": "servera",
+          "service": "firewalld"
+        }
+      ],
+      "success_message": "The firewalld service is running",
+      "failure_message": "The firewalld service is not running",
+      "hints": [
+        "Start firewalld: sudo systemctl start firewalld",
+        "Check status: systemctl status firewalld"
+      ]
+    },
+    {
+      "id": "https-firewall",
+      "name": "Verify https service is allowed in firewall",
+      "description": "The firewall must allow HTTPS traffic (443/tcp) for secure web access",
+      "points": 2,
+      "fatal": false,
+      "checks": [
+        {
+          "type": "command",
+          "host": "servera",
+          "command": "firewall-cmd --permanent --zone=public --list-services | grep -q https",
+          "expected_exit_code": 0,
+          "description": "Check https service is in the permanent firewall configuration"
+        }
+      ],
+      "success_message": "The https service is allowed in the firewall",
+      "failure_message": "The https service is not allowed in the firewall",
+      "hints": [
+        "Add https permanently: sudo firewall-cmd --permanent --add-service=https",
+        "Reload firewall: sudo firewall-cmd --reload",
+        "Verify: firewall-cmd --permanent --zone=public --list-all"
+      ]
+    },
+    {
+      "id": "web-accessible",
+      "name": "Verify web server is accessible over HTTPS",
+      "description": "The web content should be accessible via HTTPS from external hosts",
+      "points": 3,
+      "fatal": false,
+      "checks": [
+        {
+          "type": "command",
+          "host": "servera",
+          "command": "curl -k -s https://localhost",
+          "expected_stdout": "I am servera"
+        }
+      ],
+      "success_message": "The web server is accessible over HTTPS",
+      "failure_message": "The web server is not accessible over HTTPS",
+      "hints": [
+        "Test locally: curl -k https://localhost",
+        "Check httpd is running: systemctl status httpd",
+        "Check firewall rules: firewall-cmd --list-all"
+      ]
+    }
+  ]
+}

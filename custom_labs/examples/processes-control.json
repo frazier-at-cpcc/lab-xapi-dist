@@ -1,0 +1,31 @@
+{
+  "version": "1.0",
+  "metadata": {
+    "slug": "processes-control",
+    "name": "Control Jobs and Processes",
+    "description": "Control jobs and processes running in the shell",
+    "course": "rh124",
+    "chapter": "Chapter 10",
+    "estimated_time": "30 minutes",
+    "objectives": [
+      "Control jobs running in the shell",
+      "Use background and foreground processes"
+    ],
+    "tags": ["processes", "jobs", "background", "foreground", "nohup"]
+  },
+  "environment": {
+    "hosts": [
+      {"name": "workstation", "ssh_user": "student"}
+    ]
+  },
+  "tasks": [
+    {
+      "id": "processes-control-complete",
+      "name": "Process Control Complete",
+      "points": 10,
+      "checks": [
+        {"type": "command", "host": "workstation", "command": "true"}
+      ]
+    }
+  ]
+}

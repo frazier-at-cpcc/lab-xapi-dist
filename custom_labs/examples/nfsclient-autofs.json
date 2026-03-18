@@ -1,0 +1,242 @@
+{
+  "version": "1.0",
+  "metadata": {
+    "slug": "nfsclient-autofs",
+    "name": "Automount Storage Devices",
+    "description": "Automatically mount storage devices when they are accessed and unmount them when they are no longer in active use, by configuring the automounter",
+    "course": "rh134",
+    "chapter": "Chapter 15",
+    "estimated_time": "30 minutes",
+    "objectives": [
+      "Install the required packages for the automounter",
+      "Configure direct and indirect automounter maps, with resources from a preconfigured NFSv4 server"
+    ],
+    "prerequisites": [
+      "Basic understanding of NFS",
+      "Familiarity with mount concepts",
+      "Understanding of autofs configuration"
+    ],
+    "tags": [
+      "autofs",
+      "automount",
+      "nfs",
+      "storage",
+      "direct-map",
+      "indirect-map"
+    ]
+  },
+  "environment": {
+    "hosts": [
+      {
+        "name": "servera",
+        "description": "Autofs client with direct and indirect mounts",
+        "ssh_user": "root"
+      },
+      {
+        "name": "serverb",
+        "description": "NFS server exporting /shares",
+        "ssh_user": "root"
+      }
+    ],
+    "variables": {}
+  },
+  "tasks": [
+    {
+      "id": "autofs-installed",
+      "name": "Verify autofs package is installed",
+      "description": "The autofs package provides the automounter service",
+      "points": 1,
+      "fatal": true,
+      "checks": [
+        {
+          "type": "package_installed",
+          "host": "servera",
+          "package": "autofs"
+        }
+      ],
+      "success_message": "The autofs package is installed",
+      "failure_message": "The autofs package is not installed",
+      "hints": [
+        "Install autofs: sudo dnf install autofs"
+      ]
+    },
+    {
+      "id": "auto-master-direct",
+      "name": "Verify direct mount entry in auto.master",
+      "description": "The /etc/auto.master file must contain the direct mount configuration",
+      "points": 2,
+      "fatal": false,
+      "checks": [
+        {
+          "type": "file_contains",
+          "host": "servera",
+          "path": "/etc/auto.master",
+          "pattern": "/-\\s+/etc/auto\\.direct"
+        }
+      ],
+      "success_message": "Direct mount entry exists in auto.master",
+      "failure_message": "Direct mount entry is missing from auto.master",
+      "hints": [
+        "Add to /etc/auto.master: /- /etc/auto.direct",
+        "The /- indicates a direct map"
+      ]
+    },
+    {
+      "id": "auto-master-indirect",
+      "name": "Verify indirect mount entry in auto.master",
+      "description": "The /etc/auto.master file must contain the indirect mount configuration",
+      "points": 2,
+      "fatal": false,
+      "checks": [
+        {
+          "type": "file_contains",
+          "host": "servera",
+          "path": "/etc/auto.master",
+          "pattern": "/home/student/indirect\\s+/etc/auto\\.indirect"
+        }
+      ],
+      "success_message": "Indirect mount entry exists in auto.master",
+      "failure_message": "Indirect mount entry is missing from auto.master",
+      "hints": [
+        "Add to /etc/auto.master: /home/student/indirect /etc/auto.indirect",
+        "This sets up the parent directory for indirect mounts"
+      ]
+    },
+    {
+      "id": "auto-direct-file",
+      "name": "Verify /etc/auto.direct configuration",
+      "description": "The direct map file must configure the mount for /home/student/direct",
+      "points": 2,
+      "fatal": false,
+      "checks": [
+        {
+          "type": "file_exists",
+          "host": "servera",
+          "path": "/etc/auto.direct"
+        },
+        {
+          "type": "file_contains",
+          "host": "servera",
+          "path": "/etc/auto.direct",
+          "pattern": "/home/student/direct.*serverb:/shares"
+        }
+      ],
+      "success_message": "The auto.direct file is configured correctly",
+      "failure_message": "The auto.direct file is missing or misconfigured",
+      "hints": [
+        "Create /etc/auto.direct with: /home/student/direct -fstype=nfs,rw,sync serverb:/shares",
+        "Verify syntax: cat /etc/auto.direct"
+      ]
+    },
+    {
+      "id": "auto-indirect-file",
+      "name": "Verify /etc/auto.indirect configuration",
+      "description": "The indirect map file must configure wildcard mounts for subdirectories",
+      "points": 2,
+      "fatal": false,
+      "checks": [
+        {
+          "type": "file_exists",
+          "host": "servera",
+          "path": "/etc/auto.indirect"
+        },
+        {
+          "type": "file_contains",
+          "host": "servera",
+          "path": "/etc/auto.indirect",
+          "pattern": "\\*.*serverb:/shares/&"
+        }
+      ],
+      "success_message": "The auto.indirect file is configured correctly",
+      "failure_message": "The auto.indirect file is missing or misconfigured",
+      "hints": [
+        "Create /etc/auto.indirect with: * -fstype=nfs,rw,sync serverb:/shares/&",
+        "The * wildcard and & substitution enable dynamic mounting"
+      ]
+    },
+    {
+      "id": "autofs-running",
+      "name": "Verify autofs service is running",
+      "description": "The autofs service must be running to handle automount requests",
+      "points": 2,
+      "fatal": false,
+      "checks": [
+        {
+          "type": "service_running",
+          "host": "servera",
+          "service": "autofs"
+        }
+      ],
+      "success_message": "The autofs service is running",
+      "failure_message": "The autofs service is not running",
+      "hints": [
+        "Start the service: sudo systemctl start autofs",
+        "Check status: systemctl status autofs"
+      ]
+    },
+    {
+      "id": "autofs-enabled",
+      "name": "Verify autofs service is enabled at boot",
+      "description": "The autofs service should start automatically at boot",
+      "points": 1,
+      "fatal": false,
+      "checks": [
+        {
+          "type": "service_enabled",
+          "host": "servera",
+          "service": "autofs"
+        }
+      ],
+      "success_message": "The autofs service is enabled at boot",
+      "failure_message": "The autofs service is not enabled at boot",
+      "hints": [
+        "Enable the service: sudo systemctl enable autofs",
+        "Or enable and start: sudo systemctl enable --now autofs"
+      ]
+    },
+    {
+      "id": "direct-mount-works",
+      "name": "Verify direct automount is functional",
+      "description": "Accessing /home/student/direct should trigger automount",
+      "points": 3,
+      "fatal": false,
+      "checks": [
+        {
+          "type": "command",
+          "host": "servera",
+          "command": "ls /home/student/direct && mount | grep '/home/student/direct'",
+          "expected_exit_code": 0
+        }
+      ],
+      "success_message": "Direct automount is working correctly",
+      "failure_message": "Direct automount is not working",
+      "hints": [
+        "Access the directory to trigger mount: ls /home/student/direct",
+        "Check mount: mount | grep direct",
+        "Restart autofs: sudo systemctl restart autofs"
+      ]
+    },
+    {
+      "id": "indirect-mount-works",
+      "name": "Verify indirect automount is functional",
+      "description": "Accessing subdirectories under /home/student/indirect should trigger automount",
+      "points": 3,
+      "fatal": false,
+      "checks": [
+        {
+          "type": "command",
+          "host": "servera",
+          "command": "ls /home/student/indirect/west && mount | grep '/home/student/indirect'",
+          "expected_exit_code": 0
+        }
+      ],
+      "success_message": "Indirect automount is working correctly",
+      "failure_message": "Indirect automount is not working",
+      "hints": [
+        "Access a subdirectory to trigger mount: ls /home/student/indirect/west",
+        "Check mount: mount | grep indirect",
+        "The wildcard should mount serverb:/shares/west to /home/student/indirect/west"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,131 @@
+{
+  "version": "1.0",
+  "metadata": {
+    "slug": "processes-monitor",
+    "name": "Monitor Process Activity",
+    "description": "Investigate, control, and terminate processes that run on a Red Hat Enterprise Linux system",
+    "course": "rh124",
+    "chapter": "Chapter 9",
+    "estimated_time": "20 minutes",
+    "objectives": [
+      "Create a script to generate CPU load",
+      "Run multiple background processes",
+      "Monitor processes with the top command",
+      "Observe CPU usage and load averages",
+      "Terminate processes from within top"
+    ],
+    "prerequisites": [
+      "Access to servera machine"
+    ],
+    "tags": ["top", "process", "monitor", "cpu", "load", "background"]
+  },
+  "environment": {
+    "hosts": [
+      {
+        "name": "servera",
+        "description": "Server for process monitoring practice",
+        "ssh_user": "student"
+      }
+    ],
+    "variables": {
+      "BIN_DIR": "/home/student/bin",
+      "MONITOR_SCRIPT": "/home/student/bin/monitor"
+    }
+  },
+  "tasks": [
+    {
+      "id": "bin-directory-exists",
+      "name": "Verify /home/student/bin directory exists",
+      "description": "The bin directory should exist in student's home",
+      "points": 1,
+      "checks": [
+        {
+          "type": "directory_exists",
+          "host": "servera",
+          "path": "${BIN_DIR}"
+        }
+      ],
+      "success_message": "/home/student/bin directory exists",
+      "failure_message": "/home/student/bin directory not found",
+      "hints": [
+        "Create directory: mkdir /home/student/bin"
+      ]
+    },
+    {
+      "id": "monitor-script-exists",
+      "name": "Verify monitor script exists",
+      "description": "The monitor script should exist in /home/student/bin",
+      "points": 2,
+      "checks": [
+        {
+          "type": "file_exists",
+          "host": "servera",
+          "path": "${MONITOR_SCRIPT}"
+        }
+      ],
+      "success_message": "monitor script exists",
+      "failure_message": "monitor script not found in /home/student/bin",
+      "hints": [
+        "Create the monitor script with a while loop that generates CPU load"
+      ]
+    },
+    {
+      "id": "monitor-script-executable",
+      "name": "Verify monitor script is executable",
+      "description": "The monitor script should have execute permissions",
+      "points": 1,
+      "checks": [
+        {
+          "type": "command",
+          "host": "servera",
+          "command": "test -x /home/student/bin/monitor",
+          "expected_exit_code": 0
+        }
+      ],
+      "success_message": "monitor script is executable",
+      "failure_message": "monitor script is not executable",
+      "hints": [
+        "Make executable: chmod a+x /home/student/bin/monitor"
+      ]
+    },
+    {
+      "id": "monitor-script-valid",
+      "name": "Verify monitor script has correct shebang",
+      "description": "The monitor script should start with #!/bin/bash",
+      "points": 1,
+      "checks": [
+        {
+          "type": "command",
+          "host": "servera",
+          "command": "head -1 /home/student/bin/monitor | grep -q '^#!/bin/bash'",
+          "expected_exit_code": 0
+        }
+      ],
+      "success_message": "monitor script has correct shebang",
+      "failure_message": "monitor script missing #!/bin/bash shebang",
+      "hints": [
+        "First line should be: #!/bin/bash"
+      ]
+    },
+    {
+      "id": "no-monitor-processes",
+      "name": "Verify all monitor processes are terminated",
+      "description": "No monitor processes should be running (final state)",
+      "points": 3,
+      "checks": [
+        {
+          "type": "command",
+          "host": "servera",
+          "command": "! pgrep -f '/home/student/bin/monitor' && ! pgrep -x monitor",
+          "expected_exit_code": 0
+        }
+      ],
+      "success_message": "All monitor processes are terminated",
+      "failure_message": "Some monitor processes are still running",
+      "hints": [
+        "Use top: press K, enter PID, press Enter twice",
+        "Or use: pkill monitor"
+      ]
+    }
+  ]
+}

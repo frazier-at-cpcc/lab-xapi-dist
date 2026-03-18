@@ -1,0 +1,154 @@
+{
+  "version": "1.0",
+  "metadata": {
+    "slug": "systasks-syscron",
+    "name": "Schedule a Recurring System Task with Cron",
+    "description": "Schedule a recurring system task by using the system crontab file in the Cron directory",
+    "course": "rh134",
+    "chapter": "Chapter 4",
+    "estimated_time": "15 minutes",
+    "objectives": [
+      "Schedule a recurring system job to count the number of active users"
+    ],
+    "prerequisites": [
+      "Basic understanding of cron",
+      "Familiarity with system logging"
+    ],
+    "tags": [
+      "cron",
+      "crontab",
+      "scheduling",
+      "logging",
+      "automation"
+    ]
+  },
+  "environment": {
+    "hosts": [
+      {
+        "name": "servera",
+        "description": "Target server for cron configuration",
+        "ssh_user": "root"
+      }
+    ],
+    "variables": {}
+  },
+  "tasks": [
+    {
+      "id": "usercount-cron-exists",
+      "name": "Verify usercount crontab file exists",
+      "description": "The /etc/cron.d/usercount file must exist with the cron job configuration",
+      "points": 1,
+      "fatal": true,
+      "checks": [
+        {
+          "type": "file_exists",
+          "host": "servera",
+          "path": "/etc/cron.d/usercount"
+        }
+      ],
+      "success_message": "The usercount crontab file exists",
+      "failure_message": "The usercount crontab file is missing",
+      "hints": [
+        "Create /etc/cron.d/usercount with the required cron job"
+      ]
+    },
+    {
+      "id": "cron-shell-configured",
+      "name": "Verify SHELL variable is set",
+      "description": "The crontab must specify SHELL=/bin/bash",
+      "points": 1,
+      "checks": [
+        {
+          "type": "file_contains",
+          "host": "servera",
+          "path": "/etc/cron.d/usercount",
+          "pattern": "SHELL=/bin/bash"
+        }
+      ],
+      "success_message": "SHELL variable is correctly configured",
+      "failure_message": "SHELL variable is not set to /bin/bash",
+      "hints": [
+        "Add SHELL=/bin/bash to the crontab file"
+      ]
+    },
+    {
+      "id": "cron-path-configured",
+      "name": "Verify PATH variable is set",
+      "description": "The crontab must specify the PATH variable",
+      "points": 1,
+      "checks": [
+        {
+          "type": "file_contains",
+          "host": "servera",
+          "path": "/etc/cron.d/usercount",
+          "pattern": "PATH=/sbin:/bin:/usr/sbin:/usr/bin"
+        }
+      ],
+      "success_message": "PATH variable is correctly configured",
+      "failure_message": "PATH variable is not correctly configured",
+      "hints": [
+        "Add PATH=/sbin:/bin:/usr/sbin:/usr/bin to the crontab file"
+      ]
+    },
+    {
+      "id": "cron-mailto-configured",
+      "name": "Verify MAILTO variable is set",
+      "description": "The crontab must specify MAILTO=root",
+      "points": 1,
+      "checks": [
+        {
+          "type": "file_contains",
+          "host": "servera",
+          "path": "/etc/cron.d/usercount",
+          "pattern": "MAILTO=root"
+        }
+      ],
+      "success_message": "MAILTO variable is correctly configured",
+      "failure_message": "MAILTO variable is not set to root",
+      "hints": [
+        "Add MAILTO=root to the crontab file"
+      ]
+    },
+    {
+      "id": "cron-schedule-configured",
+      "name": "Verify cron job runs every 3 minutes",
+      "description": "The cron job must be scheduled to run every 3 minutes",
+      "points": 2,
+      "checks": [
+        {
+          "type": "file_contains",
+          "host": "servera",
+          "path": "/etc/cron.d/usercount",
+          "pattern": "\\*/3\\s+\\*\\s+\\*\\s+\\*\\s+\\*"
+        }
+      ],
+      "success_message": "Cron job is scheduled to run every 3 minutes",
+      "failure_message": "Cron job schedule is incorrect",
+      "hints": [
+        "The cron schedule should be: */3 * * * *",
+        "This means every 3 minutes, all hours, all days"
+      ]
+    },
+    {
+      "id": "cron-command-configured",
+      "name": "Verify cron job uses logger command",
+      "description": "The cron job must use the logger command to log active user count",
+      "points": 2,
+      "checks": [
+        {
+          "type": "file_contains",
+          "host": "servera",
+          "path": "/etc/cron.d/usercount",
+          "pattern": "root\\s+logger.*There are.*active users"
+        }
+      ],
+      "success_message": "Cron job correctly logs active user count",
+      "failure_message": "Cron job command is not correctly configured",
+      "hints": [
+        "The job should run as root user",
+        "Use: logger \"There are `w -h | wc -l` active users\"",
+        "Full line: */3 * * * * root logger \"There are `w -h | wc -l` active users\""
+      ]
+    }
+  ]
+}

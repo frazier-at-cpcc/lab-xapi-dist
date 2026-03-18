@@ -1,0 +1,73 @@
+{
+  "version": "1.0",
+  "metadata": {
+    "slug": "regexes-regex",
+    "name": "Match Text with Regular Expressions",
+    "description": "Use regular expressions to efficiently search for text in log files and configuration files",
+    "course": "rh134",
+    "chapter": "Chapter 2",
+    "estimated_time": "20 minutes",
+    "objectives": [
+      "Efficiently search for text in log files and configuration files"
+    ],
+    "prerequisites": [
+      "Access to servera machine",
+      "Root access via sudo",
+      "httpd service configured and running"
+    ],
+    "tags": ["regex", "grep", "regular expressions", "search", "log files", "configuration", "httpd"]
+  },
+  "environment": {
+    "hosts": [
+      {
+        "name": "servera",
+        "description": "Server with httpd service for regex practice",
+        "ssh_user": "student"
+      }
+    ],
+    "variables": {}
+  },
+  "tasks": [
+    {
+      "id": "httpd-log-file-exists",
+      "name": "Verify httpd log file was created",
+      "description": "The /tmp/httpd.log file should exist with grep output",
+      "points": 2,
+      "fatal": false,
+      "checks": [
+        {
+          "type": "file_exists",
+          "host": "servera",
+          "path": "/tmp/httpd.log"
+        }
+      ],
+      "success_message": "/tmp/httpd.log file exists",
+      "failure_message": "/tmp/httpd.log file not found",
+      "hints": [
+        "Create the log file: grep httpd /var/log/messages > /tmp/httpd.log",
+        "Run as root: sudo grep httpd /var/log/messages > /tmp/httpd.log"
+      ]
+    },
+    {
+      "id": "httpd-log-has-content",
+      "name": "Verify httpd log file contains httpd entries",
+      "description": "The log file should contain httpd-related log entries",
+      "points": 2,
+      "fatal": false,
+      "checks": [
+        {
+          "type": "file_contains",
+          "host": "servera",
+          "path": "/tmp/httpd.log",
+          "pattern": "httpd"
+        }
+      ],
+      "success_message": "/tmp/httpd.log contains httpd entries",
+      "failure_message": "/tmp/httpd.log does not contain httpd entries",
+      "hints": [
+        "The log file should contain lines matching 'httpd' from /var/log/messages",
+        "Run: sudo grep httpd /var/log/messages > /tmp/httpd.log"
+      ]
+    }
+  ]
+}

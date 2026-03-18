@@ -1,0 +1,208 @@
+{
+  "version": "1.0",
+  "metadata": {
+    "slug": "selinux-booleans",
+    "name": "Tune the SELinux Policy by Adjusting Booleans",
+    "description": "Configure the Apache web service to publish web content from the user's home directory",
+    "course": "rh134",
+    "chapter": "Chapter 6",
+    "estimated_time": "25 minutes",
+    "objectives": [
+      "Configure the Apache web service to publish web content from the user's home directory",
+      "Change the behavior of the SELinux system policy by activating SELinux Booleans"
+    ],
+    "prerequisites": [
+      "Access to servera machine",
+      "Root access via sudo",
+      "Understanding of SELinux Booleans"
+    ],
+    "tags": [
+      "selinux",
+      "booleans",
+      "httpd",
+      "apache",
+      "getsebool",
+      "setsebool",
+      "httpd_enable_homedirs",
+      "userdir"
+    ]
+  },
+  "environment": {
+    "hosts": [
+      {
+        "name": "servera",
+        "description": "Web server with user home directory access",
+        "ssh_user": "root"
+      }
+    ],
+    "variables": {}
+  },
+  "tasks": [
+    {
+      "id": "userdir-config",
+      "name": "Verify userdir.conf enables UserDir",
+      "description": "The userdir.conf should have UserDir set to public_html (not disabled)",
+      "points": 2,
+      "fatal": false,
+      "checks": [
+        {
+          "type": "file_contains",
+          "host": "servera",
+          "path": "/etc/httpd/conf.d/userdir.conf",
+          "pattern": "^\\s*UserDir\\s+public_html"
+        }
+      ],
+      "success_message": "UserDir is configured to use public_html",
+      "failure_message": "UserDir is not configured correctly",
+      "hints": [
+        "Edit /etc/httpd/conf.d/userdir.conf",
+        "Comment out 'UserDir disabled' and uncomment 'UserDir public_html'"
+      ]
+    },
+    {
+      "id": "httpd-running",
+      "name": "Verify httpd service is running",
+      "description": "The Apache web service should be running",
+      "points": 1,
+      "fatal": false,
+      "checks": [
+        {
+          "type": "service_running",
+          "host": "servera",
+          "service": "httpd"
+        }
+      ],
+      "success_message": "httpd service is running",
+      "failure_message": "httpd service is not running",
+      "hints": [
+        "Start httpd: sudo systemctl start httpd"
+      ]
+    },
+    {
+      "id": "httpd-enabled",
+      "name": "Verify httpd service is enabled",
+      "description": "The Apache web service should be enabled at boot",
+      "points": 1,
+      "fatal": false,
+      "checks": [
+        {
+          "type": "service_enabled",
+          "host": "servera",
+          "service": "httpd"
+        }
+      ],
+      "success_message": "httpd service is enabled",
+      "failure_message": "httpd service is not enabled",
+      "hints": [
+        "Enable httpd: sudo systemctl enable --now httpd"
+      ]
+    },
+    {
+      "id": "public-html-directory",
+      "name": "Verify ~/public_html directory exists",
+      "description": "The student user's public_html directory should exist",
+      "points": 1,
+      "fatal": false,
+      "checks": [
+        {
+          "type": "directory_exists",
+          "host": "servera",
+          "path": "/home/student/public_html"
+        }
+      ],
+      "success_message": "public_html directory exists",
+      "failure_message": "public_html directory does not exist",
+      "hints": [
+        "Create the directory: mkdir ~/public_html"
+      ]
+    },
+    {
+      "id": "public-html-index",
+      "name": "Verify ~/public_html/index.html exists with content",
+      "description": "The index.html file should exist with student content",
+      "points": 2,
+      "fatal": false,
+      "checks": [
+        {
+          "type": "file_exists",
+          "host": "servera",
+          "path": "/home/student/public_html/index.html"
+        },
+        {
+          "type": "file_contains",
+          "host": "servera",
+          "path": "/home/student/public_html/index.html",
+          "pattern": "student content on SERVERA"
+        }
+      ],
+      "success_message": "index.html exists with correct content",
+      "failure_message": "index.html is missing or has incorrect content",
+      "hints": [
+        "Create the file: echo 'This is student content on SERVERA.' > ~/public_html/index.html"
+      ]
+    },
+    {
+      "id": "home-directory-permissions",
+      "name": "Verify /home/student has correct permissions",
+      "description": "The home directory should have 711 permissions to allow Apache access",
+      "points": 2,
+      "fatal": false,
+      "checks": [
+        {
+          "type": "file_mode",
+          "host": "servera",
+          "path": "/home/student",
+          "mode": "0711"
+        }
+      ],
+      "success_message": "/home/student has correct permissions (711)",
+      "failure_message": "/home/student does not have correct permissions",
+      "hints": [
+        "Set permissions: chmod 711 /home/student"
+      ]
+    },
+    {
+      "id": "httpd-homedirs-boolean",
+      "name": "Verify httpd_enable_homedirs boolean is on",
+      "description": "The SELinux boolean httpd_enable_homedirs should be enabled persistently",
+      "points": 3,
+      "fatal": false,
+      "checks": [
+        {
+          "type": "command",
+          "host": "servera",
+          "command": "getsebool httpd_enable_homedirs | grep -q 'on$'",
+          "expected_exit_code": 0
+        }
+      ],
+      "success_message": "httpd_enable_homedirs boolean is enabled",
+      "failure_message": "httpd_enable_homedirs boolean is not enabled",
+      "hints": [
+        "Enable the boolean: sudo setsebool -P httpd_enable_homedirs on",
+        "Check status: getsebool httpd_enable_homedirs"
+      ]
+    },
+    {
+      "id": "user-web-content-accessible",
+      "name": "Verify user web content is accessible",
+      "description": "The web page at http://servera/~student/index.html should be accessible",
+      "points": 3,
+      "fatal": false,
+      "checks": [
+        {
+          "type": "command",
+          "host": "servera",
+          "command": "curl -s http://localhost/~student/index.html | grep -q 'student content on SERVERA'",
+          "expected_exit_code": 0
+        }
+      ],
+      "success_message": "User web content is accessible",
+      "failure_message": "User web content is not accessible",
+      "hints": [
+        "Check httpd status: sudo systemctl status httpd",
+        "Check SELinux boolean: getsebool httpd_enable_homedirs",
+        "Check home directory permissions: ls -ld /home/student"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,168 @@
+{
+  "version": "1.0",
+  "metadata": {
+    "slug": "lvm-extend",
+    "name": "Extend a Logical Volume",
+    "description": "Extend the storage of an existing logical volume and extend the file system to use the available storage",
+    "course": "rh134",
+    "chapter": "Chapter 11",
+    "estimated_time": "25 minutes",
+    "objectives": [
+      "Extend the storage of an existing logical volume",
+      "Extend the file system of a logical volume to use the available storage"
+    ],
+    "prerequisites": [
+      "Completion of lvm-create exercise",
+      "Understanding of LVM concepts"
+    ],
+    "tags": [
+      "lvm",
+      "lvextend",
+      "vgextend",
+      "xfs_growfs",
+      "pvcreate",
+      "storage"
+    ]
+  },
+  "environment": {
+    "hosts": [
+      {
+        "name": "servera",
+        "description": "Target server for LVM extension",
+        "ssh_user": "root"
+      }
+    ],
+    "variables": {}
+  },
+  "tasks": [
+    {
+      "id": "sdb3-partition-exists",
+      "name": "Verify third LVM partition exists",
+      "description": "The /dev/sdb3 partition should exist with LVM flag",
+      "points": 2,
+      "fatal": true,
+      "checks": [
+        {
+          "type": "command",
+          "host": "servera",
+          "command": "parted /dev/sdb print | grep -E '3.*lvm'",
+          "expected_exit_code": 0
+        }
+      ],
+      "success_message": "Third LVM partition /dev/sdb3 exists",
+      "failure_message": "Third LVM partition /dev/sdb3 does not exist or lacks LVM flag",
+      "hints": [
+        "Create: sudo parted /dev/sdb mkpart third 514MiB 1026MiB",
+        "Set LVM flag: sudo parted /dev/sdb set 3 lvm on",
+        "Register: sudo udevadm settle"
+      ]
+    },
+    {
+      "id": "sdb3-physical-volume",
+      "name": "Verify /dev/sdb3 is a physical volume",
+      "description": "The /dev/sdb3 partition should be an LVM physical volume",
+      "points": 2,
+      "fatal": true,
+      "checks": [
+        {
+          "type": "command",
+          "host": "servera",
+          "command": "pvs /dev/sdb3",
+          "expected_exit_code": 0
+        }
+      ],
+      "success_message": "Physical volume /dev/sdb3 exists",
+      "failure_message": "Physical volume /dev/sdb3 does not exist",
+      "hints": [
+        "Create PV with: sudo pvcreate /dev/sdb3",
+        "Verify with: sudo pvs or sudo pvdisplay /dev/sdb3"
+      ]
+    },
+    {
+      "id": "vg-extended",
+      "name": "Verify vg_servera includes /dev/sdb3",
+      "description": "The vg_servera volume group should include /dev/sdb3",
+      "points": 2,
+      "fatal": false,
+      "checks": [
+        {
+          "type": "command",
+          "host": "servera",
+          "command": "pvs /dev/sdb3 --noheadings -o vg_name | grep -q vg_servera && echo 'found'",
+          "expected_stdout": "found"
+        }
+      ],
+      "success_message": "Volume group vg_servera includes /dev/sdb3",
+      "failure_message": "Volume group vg_servera does not include /dev/sdb3",
+      "hints": [
+        "Extend VG with: sudo vgextend vg_servera /dev/sdb3",
+        "Verify with: sudo pvs (check VG column for sdb3)"
+      ]
+    },
+    {
+      "id": "lv-extended-size",
+      "name": "Verify lv_servera is 700 MiB",
+      "description": "The lv_servera logical volume should be extended to 700 MiB",
+      "points": 3,
+      "fatal": false,
+      "checks": [
+        {
+          "type": "command",
+          "host": "servera",
+          "command": "lvs vg_servera/lv_servera --noheadings -o lv_size --units m | grep -E '7[0-9]{2}'",
+          "expected_exit_code": 0
+        }
+      ],
+      "success_message": "Logical volume lv_servera is 700 MiB",
+      "failure_message": "Logical volume lv_servera is not 700 MiB",
+      "hints": [
+        "Extend LV with: sudo lvextend -L 700M /dev/vg_servera/lv_servera",
+        "Verify with: sudo lvdisplay /dev/vg_servera/lv_servera"
+      ]
+    },
+    {
+      "id": "filesystem-extended",
+      "name": "Verify XFS filesystem is extended",
+      "description": "The XFS filesystem on /data should use the extended LV space",
+      "points": 3,
+      "fatal": false,
+      "checks": [
+        {
+          "type": "command",
+          "host": "servera",
+          "command": "df -m /data --output=size | tail -1 | awk '{if ($1 > 600) print \"extended\"}'",
+          "expected_stdout": "extended"
+        }
+      ],
+      "success_message": "XFS filesystem has been extended",
+      "failure_message": "XFS filesystem has not been extended to use new space",
+      "hints": [
+        "Extend XFS with: sudo xfs_growfs /data",
+        "Verify with: df -h /data",
+        "Note: XFS can only be grown while mounted"
+      ]
+    },
+    {
+      "id": "data-files-present",
+      "name": "Verify /data contains configuration files",
+      "description": "The /data directory should contain the copied configuration files",
+      "points": 2,
+      "fatal": false,
+      "checks": [
+        {
+          "type": "command",
+          "host": "servera",
+          "command": "ls /data/*.conf 2>/dev/null | wc -l | awk '{if ($1 > 20) print \"files_present\"}'",
+          "expected_stdout": "files_present"
+        }
+      ],
+      "success_message": "Configuration files are present in /data",
+      "failure_message": "Configuration files are missing from /data",
+      "hints": [
+        "Files should have been copied in the previous lvm-create exercise",
+        "Copy files with: sudo cp -a /etc/*.conf /data",
+        "Verify with: ls /data | wc -l"
+      ]
+    }
+  ]
+}

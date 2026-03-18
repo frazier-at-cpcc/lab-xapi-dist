@@ -1,0 +1,271 @@
+{
+  "version": "1.0",
+  "metadata": {
+    "slug": "lvm-create",
+    "name": "Create Logical Volumes",
+    "description": "Create physical volumes, volume groups, and logical volumes with LVM tools and persistently mount them",
+    "course": "rh134",
+    "chapter": "Chapter 11",
+    "estimated_time": "30 minutes",
+    "objectives": [
+      "Create physical volumes, volume groups, and logical volumes with LVM tools",
+      "Create file systems on logical volumes and persistently mount them"
+    ],
+    "prerequisites": [
+      "Basic Linux command-line skills",
+      "Understanding of disk partitioning concepts",
+      "Understanding of LVM concepts"
+    ],
+    "tags": [
+      "lvm",
+      "pvcreate",
+      "vgcreate",
+      "lvcreate",
+      "xfs",
+      "fstab",
+      "mount",
+      "storage"
+    ]
+  },
+  "environment": {
+    "hosts": [
+      {
+        "name": "servera",
+        "description": "Target server for LVM configuration",
+        "ssh_user": "root"
+      }
+    ],
+    "variables": {}
+  },
+  "tasks": [
+    {
+      "id": "sdb-gpt-label",
+      "name": "Verify GPT partition table on /dev/sdb",
+      "description": "The /dev/sdb disk should have a GPT partition table",
+      "points": 1,
+      "fatal": true,
+      "checks": [
+        {
+          "type": "command",
+          "host": "servera",
+          "command": "parted /dev/sdb print | grep -i 'Partition Table'",
+          "expected_stdout": "gpt"
+        }
+      ],
+      "success_message": "GPT partition table is configured on /dev/sdb",
+      "failure_message": "GPT partition table is not configured on /dev/sdb",
+      "hints": [
+        "Create GPT partition table with: sudo parted /dev/sdb mklabel gpt"
+      ]
+    },
+    {
+      "id": "sdb1-partition-exists",
+      "name": "Verify first LVM partition exists",
+      "description": "The /dev/sdb1 partition should exist with LVM flag",
+      "points": 1,
+      "fatal": true,
+      "checks": [
+        {
+          "type": "command",
+          "host": "servera",
+          "command": "parted /dev/sdb print | grep -E '1.*lvm'",
+          "expected_exit_code": 0
+        }
+      ],
+      "success_message": "First LVM partition /dev/sdb1 exists",
+      "failure_message": "First LVM partition /dev/sdb1 does not exist or lacks LVM flag",
+      "hints": [
+        "Create: sudo parted /dev/sdb mkpart first 1MiB 257MiB",
+        "Set LVM flag: sudo parted /dev/sdb set 1 lvm on",
+        "Register: sudo udevadm settle"
+      ]
+    },
+    {
+      "id": "sdb2-partition-exists",
+      "name": "Verify second LVM partition exists",
+      "description": "The /dev/sdb2 partition should exist with LVM flag",
+      "points": 1,
+      "fatal": true,
+      "checks": [
+        {
+          "type": "command",
+          "host": "servera",
+          "command": "parted /dev/sdb print | grep -E '2.*lvm'",
+          "expected_exit_code": 0
+        }
+      ],
+      "success_message": "Second LVM partition /dev/sdb2 exists",
+      "failure_message": "Second LVM partition /dev/sdb2 does not exist or lacks LVM flag",
+      "hints": [
+        "Create: sudo parted /dev/sdb mkpart second 257MiB 513MiB",
+        "Set LVM flag: sudo parted /dev/sdb set 2 lvm on",
+        "Register: sudo udevadm settle"
+      ]
+    },
+    {
+      "id": "physical-volumes-created",
+      "name": "Verify physical volumes are created",
+      "description": "Both /dev/sdb1 and /dev/sdb2 should be LVM physical volumes",
+      "points": 2,
+      "fatal": true,
+      "checks": [
+        {
+          "type": "command",
+          "host": "servera",
+          "command": "pvs /dev/sdb1 /dev/sdb2",
+          "expected_exit_code": 0
+        }
+      ],
+      "success_message": "Physical volumes are created",
+      "failure_message": "Physical volumes are not created",
+      "hints": [
+        "Create PVs with: sudo pvcreate /dev/sdb1 /dev/sdb2",
+        "Verify with: sudo pvs or sudo pvdisplay"
+      ]
+    },
+    {
+      "id": "volume-group-exists",
+      "name": "Verify vg_servera volume group exists",
+      "description": "The vg_servera volume group should exist",
+      "points": 2,
+      "fatal": true,
+      "checks": [
+        {
+          "type": "command",
+          "host": "servera",
+          "command": "vgs vg_servera",
+          "expected_exit_code": 0
+        }
+      ],
+      "success_message": "Volume group vg_servera exists",
+      "failure_message": "Volume group vg_servera does not exist",
+      "hints": [
+        "Create VG with: sudo vgcreate vg_servera /dev/sdb1 /dev/sdb2",
+        "Verify with: sudo vgs or sudo vgdisplay vg_servera"
+      ]
+    },
+    {
+      "id": "logical-volume-exists",
+      "name": "Verify lv_servera logical volume exists",
+      "description": "The lv_servera logical volume should exist in vg_servera with 400 MiB",
+      "points": 2,
+      "fatal": false,
+      "checks": [
+        {
+          "type": "command",
+          "host": "servera",
+          "command": "lvs vg_servera/lv_servera",
+          "expected_exit_code": 0
+        }
+      ],
+      "success_message": "Logical volume lv_servera exists",
+      "failure_message": "Logical volume lv_servera does not exist",
+      "hints": [
+        "Create LV with: sudo lvcreate -n lv_servera -L 400M vg_servera",
+        "Verify with: sudo lvs or sudo lvdisplay /dev/vg_servera/lv_servera"
+      ]
+    },
+    {
+      "id": "lv-size-correct",
+      "name": "Verify logical volume size is 400 MiB",
+      "description": "The lv_servera logical volume should be approximately 400 MiB",
+      "points": 1,
+      "fatal": false,
+      "checks": [
+        {
+          "type": "command",
+          "host": "servera",
+          "command": "lvs vg_servera/lv_servera --noheadings -o lv_size --units m | grep -E '4[0-9]{2}'",
+          "expected_exit_code": 0
+        }
+      ],
+      "success_message": "Logical volume size is approximately 400 MiB",
+      "failure_message": "Logical volume size is not 400 MiB",
+      "hints": [
+        "Create the LV with: lvcreate -n lv_servera -L 400M vg_servera"
+      ]
+    },
+    {
+      "id": "lv-xfs-filesystem",
+      "name": "Verify XFS filesystem on logical volume",
+      "description": "The lv_servera logical volume should be formatted with XFS",
+      "points": 2,
+      "fatal": false,
+      "checks": [
+        {
+          "type": "command",
+          "host": "servera",
+          "command": "lsblk -f /dev/vg_servera/lv_servera | grep -i xfs",
+          "expected_exit_code": 0
+        }
+      ],
+      "success_message": "XFS filesystem is on lv_servera",
+      "failure_message": "XFS filesystem is not on lv_servera",
+      "hints": [
+        "Format with: sudo mkfs -t xfs /dev/vg_servera/lv_servera",
+        "Verify with: lsblk -f /dev/vg_servera/lv_servera"
+      ]
+    },
+    {
+      "id": "data-directory-exists",
+      "name": "Verify /data directory exists",
+      "description": "The /data mount point directory should exist",
+      "points": 1,
+      "fatal": false,
+      "checks": [
+        {
+          "type": "directory_exists",
+          "host": "servera",
+          "path": "/data"
+        }
+      ],
+      "success_message": "Directory /data exists",
+      "failure_message": "Directory /data does not exist",
+      "hints": [
+        "Create with: sudo mkdir /data"
+      ]
+    },
+    {
+      "id": "fstab-entry-exists",
+      "name": "Verify /etc/fstab entry for /data",
+      "description": "An entry for /data mount point should exist in /etc/fstab",
+      "points": 2,
+      "fatal": false,
+      "checks": [
+        {
+          "type": "file_contains",
+          "host": "servera",
+          "path": "/etc/fstab",
+          "pattern": "vg_servera.*lv_servera.*/data.*xfs"
+        }
+      ],
+      "success_message": "fstab entry for /data exists",
+      "failure_message": "fstab entry for /data is missing or incorrect",
+      "hints": [
+        "Add to /etc/fstab: /dev/vg_servera/lv_servera /data xfs defaults 0 0",
+        "Run: sudo systemctl daemon-reload after editing fstab"
+      ]
+    },
+    {
+      "id": "data-mounted",
+      "name": "Verify /data is mounted",
+      "description": "The /data directory should have the LV mounted",
+      "points": 2,
+      "fatal": false,
+      "checks": [
+        {
+          "type": "mount_exists",
+          "host": "servera",
+          "mountpoint": "/data",
+          "fstype": "xfs"
+        }
+      ],
+      "success_message": "Logical volume is mounted on /data",
+      "failure_message": "Logical volume is not mounted on /data",
+      "hints": [
+        "Mount with: sudo mount /data",
+        "Verify with: mount | grep /data or df -h /data"
+      ]
+    }
+  ]
+}

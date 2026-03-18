@@ -1,0 +1,125 @@
+{
+  "version": "1.0",
+  "metadata": {
+    "slug": "users-user",
+    "name": "Manage Local User Accounts",
+    "description": "Create, modify, and delete local user accounts",
+    "course": "rh124",
+    "chapter": "Chapter 5",
+    "estimated_time": "15 minutes",
+    "objectives": [
+      "Create user accounts with useradd",
+      "Set user passwords with passwd",
+      "Modify user accounts with usermod",
+      "Delete user accounts with userdel"
+    ],
+    "prerequisites": [
+      "Access to servera machine",
+      "Root or sudo access"
+    ],
+    "tags": ["users", "useradd", "usermod", "userdel", "passwd"]
+  },
+  "environment": {
+    "hosts": [
+      {
+        "name": "servera",
+        "description": "Server for user management practice",
+        "ssh_user": "student"
+      }
+    ],
+    "variables": {}
+  },
+  "tasks": [
+    {
+      "id": "operator1-exists",
+      "name": "Verify operator1 user exists with correct comment",
+      "description": "operator1 user should exist with comment 'Operator One'",
+      "points": 2,
+      "checks": [
+        {
+          "type": "user_exists",
+          "host": "servera",
+          "username": "operator1"
+        },
+        {
+          "type": "command",
+          "host": "servera",
+          "command": "getent passwd operator1 | grep -q 'Operator One'",
+          "expected_exit_code": 0
+        }
+      ],
+      "success_message": "operator1 exists with comment 'Operator One'",
+      "failure_message": "operator1 missing or comment incorrect",
+      "hints": [
+        "Create user: sudo useradd operator1",
+        "Set password: sudo passwd operator1",
+        "Set comment: sudo usermod -c 'Operator One' operator1"
+      ]
+    },
+    {
+      "id": "operator2-exists",
+      "name": "Verify operator2 user exists with correct comment",
+      "description": "operator2 user should exist with comment 'Operator Two'",
+      "points": 2,
+      "checks": [
+        {
+          "type": "user_exists",
+          "host": "servera",
+          "username": "operator2"
+        },
+        {
+          "type": "command",
+          "host": "servera",
+          "command": "getent passwd operator2 | grep -q 'Operator Two'",
+          "expected_exit_code": 0
+        }
+      ],
+      "success_message": "operator2 exists with comment 'Operator Two'",
+      "failure_message": "operator2 missing or comment incorrect",
+      "hints": [
+        "Create user: sudo useradd operator2",
+        "Set password: sudo passwd operator2",
+        "Set comment: sudo usermod -c 'Operator Two' operator2"
+      ]
+    },
+    {
+      "id": "operator3-deleted",
+      "name": "Verify operator3 user is deleted",
+      "description": "operator3 user should not exist (was deleted with userdel -r)",
+      "points": 1,
+      "checks": [
+        {
+          "type": "command",
+          "host": "servera",
+          "command": "! id operator3 2>/dev/null",
+          "expected_exit_code": 0
+        }
+      ],
+      "success_message": "operator3 user has been deleted",
+      "failure_message": "operator3 user still exists",
+      "hints": [
+        "Delete user with home directory: sudo userdel -r operator3"
+      ]
+    },
+    {
+      "id": "operator3-home-deleted",
+      "name": "Verify operator3 home directory is deleted",
+      "description": "/home/operator3 should not exist",
+      "points": 1,
+      "checks": [
+        {
+          "type": "command",
+          "host": "servera",
+          "command": "test ! -d /home/operator3",
+          "expected_exit_code": 0
+        }
+      ],
+      "success_message": "/home/operator3 has been removed",
+      "failure_message": "/home/operator3 still exists",
+      "hints": [
+        "Use userdel -r to remove user and home directory",
+        "Or manually: sudo rm -rf /home/operator3"
+      ]
+    }
+  ]
+}

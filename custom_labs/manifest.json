@@ -1,0 +1,531 @@
+{
+  "generated": "2026-03-18",
+  "count": 75,
+  "labs": [
+    {
+      "file": "archive-manage.json",
+      "slug": "archive-manage",
+      "name": "Manage Compressed Tar Archives",
+      "course": "rh134",
+      "tasks": 8
+    },
+    {
+      "file": "boot-grub.json",
+      "slug": "boot-grub",
+      "name": "Manage the Boot Loader and Kernel Command Line",
+      "course": "rh134",
+      "tasks": 4
+    },
+    {
+      "file": "boot-repairing.json",
+      "slug": "boot-repairing",
+      "name": "Repair a Damaged File System at Boot Time",
+      "course": "rh134",
+      "tasks": 4
+    },
+    {
+      "file": "boot-selecting.json",
+      "slug": "boot-selecting",
+      "name": "Explore the Boot Process and Select a Boot Target",
+      "course": "rh134",
+      "tasks": 4
+    },
+    {
+      "file": "cli-desktop.json",
+      "slug": "cli-desktop",
+      "name": "Access the Command Line with the Desktop Environment",
+      "course": "rh124",
+      "tasks": 1
+    },
+    {
+      "file": "containers-image.json",
+      "slug": "containers-image",
+      "name": "Create and Manage Container Images",
+      "course": "rh134",
+      "tasks": 9
+    },
+    {
+      "file": "containers-podman.json",
+      "slug": "containers-podman",
+      "name": "Run Containers with Podman",
+      "course": "rh134",
+      "tasks": 6
+    },
+    {
+      "file": "edit-file.json",
+      "slug": "edit-file",
+      "name": "Edit Text Files from the Command Line",
+      "course": "rh124",
+      "tasks": 2
+    },
+    {
+      "file": "files-make.json",
+      "slug": "files-make",
+      "name": "Create Links Between Files",
+      "course": "rh124",
+      "tasks": 4
+    },
+    {
+      "file": "files-manage.json",
+      "slug": "files-manage",
+      "name": "Manage Files with Command-line Tools",
+      "course": "rh124",
+      "tasks": 4
+    },
+    {
+      "file": "flatpak-application.json",
+      "slug": "flatpak-application",
+      "name": "Manage Applications from Flatpak",
+      "course": "rh124",
+      "tasks": 6
+    },
+    {
+      "file": "flatpak-configure.json",
+      "slug": "flatpak-configure",
+      "name": "Configure Flatpak for Application Installation",
+      "course": "rh124",
+      "tasks": 6
+    },
+    {
+      "file": "fs-locate.json",
+      "slug": "fs-locate",
+      "name": "Locate Files on a File System",
+      "course": "rh124",
+      "tasks": 8
+    },
+    {
+      "file": "fs-mount.json",
+      "slug": "fs-mount",
+      "name": "Mount and Unmount a File System",
+      "course": "rh124",
+      "tasks": 5
+    },
+    {
+      "file": "help-manual.json",
+      "slug": "help-manual",
+      "name": "Get Help from Manual Pages",
+      "course": "rh124",
+      "tasks": 4
+    },
+    {
+      "file": "image-bootable.json",
+      "slug": "image-bootable",
+      "name": "Create Installable Images for Image Mode",
+      "course": "rh134",
+      "tasks": 7
+    },
+    {
+      "file": "image-manage.json",
+      "slug": "image-manage",
+      "name": "Manage Image Mode-based Systems",
+      "course": "rh134",
+      "tasks": 8
+    },
+    {
+      "file": "image-server.json",
+      "slug": "image-server",
+      "name": "Install Red Hat Enterprise Linux by Using Image Mode",
+      "course": "rh134",
+      "tasks": 8
+    },
+    {
+      "file": "installing-install.json",
+      "slug": "installing-install",
+      "name": "Install Red Hat Enterprise Linux Interactively",
+      "course": "rh134",
+      "tasks": 10
+    },
+    {
+      "file": "installing-kickstart.json",
+      "slug": "installing-kickstart",
+      "name": "Automate Red Hat Enterprise Linux Installation with Kickstart",
+      "course": "rh134",
+      "tasks": 12
+    },
+    {
+      "file": "lightspeed-assistant.json",
+      "slug": "lightspeed-assistant",
+      "name": "Getting AI-assisted Help with Red Hat Enterprise Linux Lightspeed",
+      "course": "rh124",
+      "tasks": 3
+    },
+    {
+      "file": "logs-maintain.json",
+      "slug": "logs-maintain",
+      "name": "Maintain Synchronized Time",
+      "course": "rh134",
+      "tasks": 6
+    },
+    {
+      "file": "logs-preserve.json",
+      "slug": "logs-preserve",
+      "name": "Configure a Persistent System Journal",
+      "course": "rh134",
+      "tasks": 4
+    },
+    {
+      "file": "logs-syslog.json",
+      "slug": "logs-syslog",
+      "name": "Interpret and Manage Syslog Events",
+      "course": "rh134",
+      "tasks": 5
+    },
+    {
+      "file": "logs-systemd.json",
+      "slug": "logs-systemd",
+      "name": "Find and Interpret System Journal Log Entries",
+      "course": "rh134",
+      "tasks": 1
+    },
+    {
+      "file": "lvm-create.json",
+      "slug": "lvm-create",
+      "name": "Create Logical Volumes",
+      "course": "rh134",
+      "tasks": 11
+    },
+    {
+      "file": "lvm-extend.json",
+      "slug": "lvm-extend",
+      "name": "Extend a Logical Volume",
+      "course": "rh134",
+      "tasks": 6
+    },
+    {
+      "file": "net-configure.json",
+      "slug": "net-configure",
+      "name": "Configure Networking from the Command Line",
+      "course": "rh124",
+      "tasks": 7
+    },
+    {
+      "file": "net-edit.json",
+      "slug": "net-edit",
+      "name": "Edit Network Configuration Files",
+      "course": "rh124",
+      "tasks": 7
+    },
+    {
+      "file": "net-hostnames.json",
+      "slug": "net-hostnames",
+      "name": "Configure Hostnames and Name Resolution",
+      "course": "rh124",
+      "tasks": 5
+    },
+    {
+      "file": "netbasics-validate.json",
+      "slug": "netbasics-validate",
+      "name": "Validate Network Configuration",
+      "course": "rh124",
+      "tasks": 6
+    },
+    {
+      "file": "netsecurity-firewalls.json",
+      "slug": "netsecurity-firewalls",
+      "name": "Manage a Server Firewall",
+      "course": "rh134",
+      "tasks": 8
+    },
+    {
+      "file": "netsecurity-ports.json",
+      "slug": "netsecurity-ports",
+      "name": "SELinux Port Labeling",
+      "course": "rh134",
+      "tasks": 5
+    },
+    {
+      "file": "nfs-client-setup.json",
+      "slug": "custom-nfs-client",
+      "name": "Configure NFS Client with Autofs",
+      "course": "rh134",
+      "tasks": 7
+    },
+    {
+      "file": "nfsclient-autofs.json",
+      "slug": "nfsclient-autofs",
+      "name": "Automount Storage Devices",
+      "course": "rh134",
+      "tasks": 9
+    },
+    {
+      "file": "nfsclient-nfs.json",
+      "slug": "nfsclient-nfs",
+      "name": "Mount NFS File Systems",
+      "course": "rh134",
+      "tasks": 5
+    },
+    {
+      "file": "perms-cli.json",
+      "slug": "perms-cli",
+      "name": "Manage File Permissions from the Command Line",
+      "course": "rh124",
+      "tasks": 6
+    },
+    {
+      "file": "perms-default.json",
+      "slug": "perms-default",
+      "name": "Manage Default Permissions and Special Permissions",
+      "course": "rh124",
+      "tasks": 8
+    },
+    {
+      "file": "processes-control.json",
+      "slug": "processes-control",
+      "name": "Control Jobs and Processes",
+      "course": "rh124",
+      "tasks": 1
+    },
+    {
+      "file": "processes-kill.json",
+      "slug": "processes-kill",
+      "name": "Send Signals to Processes",
+      "course": "rh124",
+      "tasks": 5
+    },
+    {
+      "file": "processes-monitor.json",
+      "slug": "processes-monitor",
+      "name": "Monitor Process Activity",
+      "course": "rh124",
+      "tasks": 5
+    },
+    {
+      "file": "rcopy-sync.json",
+      "slug": "rcopy-sync",
+      "name": "Synchronize Content Between Systems",
+      "course": "rh134",
+      "tasks": 6
+    },
+    {
+      "file": "rcopy-transfer.json",
+      "slug": "rcopy-transfer",
+      "name": "Transfer Files Between Systems",
+      "course": "rh134",
+      "tasks": 7
+    },
+    {
+      "file": "regexes-regex.json",
+      "slug": "regexes-regex",
+      "name": "Match Text with Regular Expressions",
+      "course": "rh134",
+      "tasks": 2
+    },
+    {
+      "file": "rootpw-recover.json",
+      "slug": "rootpw-recover",
+      "name": "Regain Superuser Access and Reset the Root Password",
+      "course": "rh134",
+      "tasks": 5
+    },
+    {
+      "file": "scheduling-at.json",
+      "slug": "scheduling-at",
+      "name": "Schedule a Future User Job",
+      "course": "rh134",
+      "tasks": 4
+    },
+    {
+      "file": "scheduling-cron.json",
+      "slug": "scheduling-cron",
+      "name": "Schedule Recurring User Jobs",
+      "course": "rh134",
+      "tasks": 3
+    },
+    {
+      "file": "scripts-env.json",
+      "slug": "scripts-env",
+      "name": "Change the Shell Environment",
+      "course": "rh134",
+      "tasks": 2
+    },
+    {
+      "file": "scripts-loops.json",
+      "slug": "scripts-loops",
+      "name": "Run Loops and Conditional Commands",
+      "course": "rh134",
+      "tasks": 8
+    },
+    {
+      "file": "scripts-write.json",
+      "slug": "scripts-write",
+      "name": "Write Simple Bash Scripts",
+      "course": "rh134",
+      "tasks": 7
+    },
+    {
+      "file": "selinux-booleans.json",
+      "slug": "selinux-booleans",
+      "name": "Tune the SELinux Policy by Adjusting Booleans",
+      "course": "rh134",
+      "tasks": 8
+    },
+    {
+      "file": "selinux-filecontexts.json",
+      "slug": "selinux-filecontexts",
+      "name": "Control SELinux File Contexts",
+      "course": "rh134",
+      "tasks": 9
+    },
+    {
+      "file": "selinux-issues.json",
+      "slug": "selinux-issues",
+      "name": "Investigate and Resolve SELinux Issues",
+      "course": "rh134",
+      "tasks": 6
+    },
+    {
+      "file": "selinux-opsmode.json",
+      "slug": "selinux-opsmode",
+      "name": "Operate SELinux",
+      "course": "rh134",
+      "tasks": 3
+    },
+    {
+      "file": "services-control.json",
+      "slug": "services-control",
+      "name": "Control System Services",
+      "course": "rh124",
+      "tasks": 4
+    },
+    {
+      "file": "services-identify.json",
+      "slug": "services-identify",
+      "name": "Identify System Processes that Start Automatically",
+      "course": "rh124",
+      "tasks": 6
+    },
+    {
+      "file": "shellio-redirect.json",
+      "slug": "shellio-redirect",
+      "name": "Redirect Output to Files and Programs",
+      "course": "rh124",
+      "tasks": 6
+    },
+    {
+      "file": "software-dnf.json",
+      "slug": "software-dnf",
+      "name": "Install and Update Packages with DNF",
+      "course": "rh124",
+      "tasks": 6
+    },
+    {
+      "file": "software-repo.json",
+      "slug": "software-repo",
+      "name": "Enable a DNF Software Repository",
+      "course": "rh124",
+      "tasks": 9
+    },
+    {
+      "file": "software-rpm.json",
+      "slug": "software-rpm",
+      "name": "Investigate an RPM Software Package",
+      "course": "rh124",
+      "tasks": 4
+    },
+    {
+      "file": "ssh-hostkeys.json",
+      "slug": "ssh-hostkeys",
+      "name": "Manage SSH Host Keys",
+      "course": "rh124",
+      "tasks": 5
+    },
+    {
+      "file": "ssh-keyauth.json",
+      "slug": "ssh-keyauth",
+      "name": "Configure SSH Key-based Authentication",
+      "course": "rh124",
+      "tasks": 5
+    },
+    {
+      "file": "storage-partitions.json",
+      "slug": "storage-partitions",
+      "name": "Create and Manage File Systems on Standard Partitions",
+      "course": "rh134",
+      "tasks": 6
+    },
+    {
+      "file": "storage-swap.json",
+      "slug": "storage-swap",
+      "name": "Manage Swap Space",
+      "course": "rh134",
+      "tasks": 5
+    },
+    {
+      "file": "systasks-syscron.json",
+      "slug": "systasks-syscron",
+      "name": "Schedule a Recurring System Task with Cron",
+      "course": "rh134",
+      "tasks": 6
+    },
+    {
+      "file": "systasks-tempfiles.json",
+      "slug": "systasks-tempfiles",
+      "name": "Manage Temporary Files",
+      "course": "rh134",
+      "tasks": 7
+    },
+    {
+      "file": "systasks-timers.json",
+      "slug": "systasks-timers",
+      "name": "Manage Repeating Jobs by Using Systemd Timer Units",
+      "course": "rh134",
+      "tasks": 5
+    },
+    {
+      "file": "tuning-nice.json",
+      "slug": "tuning-nice",
+      "name": "Influence Process Scheduling",
+      "course": "rh134",
+      "tasks": 4
+    },
+    {
+      "file": "tuning-profiles.json",
+      "slug": "tuning-profiles",
+      "name": "Set a Tuning Profile",
+      "course": "rh134",
+      "tasks": 6
+    },
+    {
+      "file": "user-management.json",
+      "slug": "user-management",
+      "name": "Linux User and Group Management",
+      "course": "rh124",
+      "tasks": 7
+    },
+    {
+      "file": "users-group.json",
+      "slug": "users-group",
+      "name": "Manage Local Group Accounts",
+      "course": "rh124",
+      "tasks": 5
+    },
+    {
+      "file": "users-password.json",
+      "slug": "users-password",
+      "name": "Manage User Passwords",
+      "course": "rh124",
+      "tasks": 4
+    },
+    {
+      "file": "users-superuser.json",
+      "slug": "users-superuser",
+      "name": "Gain Superuser Access",
+      "course": "rh124",
+      "tasks": 5
+    },
+    {
+      "file": "users-user.json",
+      "slug": "users-user",
+      "name": "Manage Local User Accounts",
+      "course": "rh124",
+      "tasks": 4
+    },
+    {
+      "file": "webserver-setup.json",
+      "slug": "webserver-setup",
+      "name": "Configure a Basic Web Server",
+      "course": "rh124",
+      "tasks": 6
+    }
+  ]
+}

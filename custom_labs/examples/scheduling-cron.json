@@ -1,0 +1,99 @@
+{
+  "version": "1.0",
+  "metadata": {
+    "slug": "scheduling-cron",
+    "name": "Schedule Recurring User Jobs",
+    "description": "Schedule and inspect recurring jobs by setting up Cron jobs as a regular user",
+    "course": "rh134",
+    "chapter": "Chapter 3",
+    "estimated_time": "20 minutes",
+    "objectives": [
+      "Schedule recurring jobs to run as a nonprivileged user",
+      "Inspect the commands that a scheduled recurring job runs",
+      "Remove scheduled recurring jobs"
+    ],
+    "prerequisites": [
+      "Access to servera machine",
+      "SSH access as student user",
+      "crond service running"
+    ],
+    "tags": ["cron", "crontab", "scheduling", "recurring jobs", "crond"]
+  },
+  "environment": {
+    "hosts": [
+      {
+        "name": "servera",
+        "description": "Server for cron scheduling practice",
+        "ssh_user": "student"
+      }
+    ],
+    "variables": {}
+  },
+  "tasks": [
+    {
+      "id": "first-cron-job-file-exists",
+      "name": "Verify my_first_cron_job.txt exists",
+      "description": "The cron job should have created /home/student/my_first_cron_job.txt",
+      "points": 2,
+      "fatal": false,
+      "checks": [
+        {
+          "type": "file_exists",
+          "host": "servera",
+          "path": "/home/student/my_first_cron_job.txt"
+        }
+      ],
+      "success_message": "my_first_cron_job.txt file exists",
+      "failure_message": "my_first_cron_job.txt file not found - cron job may not have run yet",
+      "hints": [
+        "Create a cron job that runs every 2 minutes: crontab -e",
+        "Add: */2 * * * Tue-Thu /usr/bin/date >> /home/student/my_first_cron_job.txt",
+        "Wait up to 2 minutes for the job to run"
+      ]
+    },
+    {
+      "id": "first-cron-job-has-content",
+      "name": "Verify my_first_cron_job.txt contains date output",
+      "description": "The file should contain date output from the cron job",
+      "points": 2,
+      "fatal": false,
+      "checks": [
+        {
+          "type": "command",
+          "host": "servera",
+          "command": "test -s /home/student/my_first_cron_job.txt",
+          "expected_exit_code": 0
+        }
+      ],
+      "success_message": "my_first_cron_job.txt contains output from the date command",
+      "failure_message": "my_first_cron_job.txt is empty",
+      "hints": [
+        "The cron job should append date output to the file",
+        "Check content: cat ~/my_first_cron_job.txt",
+        "Verify the cron job schedule matches current day of week"
+      ]
+    },
+    {
+      "id": "crontab-removed",
+      "name": "Verify student crontab is removed",
+      "description": "All scheduled recurring jobs for the student user should be removed",
+      "points": 3,
+      "fatal": false,
+      "checks": [
+        {
+          "type": "command",
+          "host": "servera",
+          "command": "crontab -l 2>&1 | grep -q 'no crontab'",
+          "expected_exit_code": 0
+        }
+      ],
+      "success_message": "Student crontab has been removed",
+      "failure_message": "Student crontab still exists - use crontab -r to remove",
+      "hints": [
+        "Remove all cron jobs: crontab -r",
+        "Verify removal: crontab -l",
+        "Should show 'no crontab for student'"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,120 @@
+{
+  "version": "1.0",
+  "metadata": {
+    "slug": "scheduling-at",
+    "name": "Schedule a Future User Job",
+    "description": "Schedule commands to run at one specified future time using the at command",
+    "course": "rh134",
+    "chapter": "Chapter 3",
+    "estimated_time": "20 minutes",
+    "objectives": [
+      "Schedule a job to run at a specified future time",
+      "Inspect the commands that a scheduled job runs",
+      "Delete the scheduled jobs"
+    ],
+    "prerequisites": [
+      "Access to servera machine",
+      "SSH access as student user",
+      "at package installed"
+    ],
+    "tags": ["at", "atq", "atrm", "scheduling", "deferred jobs", "future jobs"]
+  },
+  "environment": {
+    "hosts": [
+      {
+        "name": "servera",
+        "description": "Server for scheduling practice",
+        "ssh_user": "student"
+      }
+    ],
+    "variables": {}
+  },
+  "tasks": [
+    {
+      "id": "myjob-file-exists",
+      "name": "Verify myjob.txt file was created",
+      "description": "The /home/student/myjob.txt file should exist from the scheduled job",
+      "points": 2,
+      "fatal": false,
+      "checks": [
+        {
+          "type": "file_exists",
+          "host": "servera",
+          "path": "/home/student/myjob.txt"
+        }
+      ],
+      "success_message": "myjob.txt file exists",
+      "failure_message": "myjob.txt file not found - the scheduled job may not have run yet",
+      "hints": [
+        "Schedule the job: echo 'date >> /home/student/myjob.txt' | at now +2min",
+        "Wait for the job to execute (2 minutes)",
+        "Monitor with: watch atq"
+      ]
+    },
+    {
+      "id": "myjob-has-date",
+      "name": "Verify myjob.txt contains date output",
+      "description": "The myjob.txt file should contain output from the date command",
+      "points": 2,
+      "fatal": false,
+      "checks": [
+        {
+          "type": "command",
+          "host": "servera",
+          "command": "test -s /home/student/myjob.txt",
+          "expected_exit_code": 0
+        }
+      ],
+      "success_message": "myjob.txt contains date output",
+      "failure_message": "myjob.txt is empty or does not contain expected content",
+      "hints": [
+        "The job should append date output to myjob.txt",
+        "Check content: cat ~/myjob.txt"
+      ]
+    },
+    {
+      "id": "teatime-job-removed",
+      "name": "Verify teatime job was removed",
+      "description": "The job scheduled for teatime (16:00) should have been removed with atrm",
+      "points": 2,
+      "fatal": false,
+      "checks": [
+        {
+          "type": "command",
+          "host": "servera",
+          "command": "! atq -q g | grep -q .",
+          "expected_exit_code": 0
+        }
+      ],
+      "success_message": "No jobs in queue g (teatime job removed)",
+      "failure_message": "Jobs still exist in queue g - teatime job was not removed",
+      "hints": [
+        "List jobs: atq",
+        "Remove job by number: atrm <job_number>",
+        "Jobs in queue g were scheduled with: at -q g teatime"
+      ]
+    },
+    {
+      "id": "cookies-job-exists",
+      "name": "Verify cookies job exists in queue b",
+      "description": "The job scheduled for 16:05 in queue b should still exist",
+      "points": 2,
+      "fatal": false,
+      "checks": [
+        {
+          "type": "command",
+          "host": "servera",
+          "command": "atq -q b | grep -q .",
+          "expected_exit_code": 0
+        }
+      ],
+      "success_message": "Cookies job exists in queue b",
+      "failure_message": "No jobs found in queue b - cookies job may have been removed or already run",
+      "hints": [
+        "Schedule the job: at -q b 16:05",
+        "Then enter: echo 'The cookies are good' >> /home/student/cookies.txt",
+        "Press Ctrl+D to finish"
+      ]
+    }
+  ]
+}

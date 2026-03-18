@@ -1,0 +1,134 @@
+{
+  "version": "1.0",
+  "metadata": {
+    "slug": "boot-repairing",
+    "name": "Repair a Damaged File System at Boot Time",
+    "description": "Diagnose file-system issues and recover the system by fixing /etc/fstab errors",
+    "course": "rh134",
+    "chapter": "Chapter 12",
+    "estimated_time": "30 minutes",
+    "objectives": [
+      "Diagnose file-system issues and recover the system"
+    ],
+    "prerequisites": [
+      "Understanding of /etc/fstab configuration",
+      "Familiarity with emergency and rescue boot targets",
+      "Knowledge of mount command usage"
+    ],
+    "tags": [
+      "fstab",
+      "boot-repair",
+      "emergency-target",
+      "file-system",
+      "mount",
+      "troubleshooting"
+    ]
+  },
+  "environment": {
+    "hosts": [
+      {
+        "name": "servera",
+        "description": "Target server with file system issues to repair",
+        "ssh_user": "root"
+      }
+    ],
+    "variables": {}
+  },
+  "tasks": [
+    {
+      "id": "fstab-root-correct",
+      "name": "Verify /etc/fstab has correct root mount point",
+      "description": "The /etc/fstab file should have / as the mount point for the root filesystem, not /fakeroot",
+      "points": 3,
+      "fatal": false,
+      "checks": [
+        {
+          "type": "file_not_contains",
+          "host": "servera",
+          "path": "/etc/fstab",
+          "pattern": "/fakeroot",
+          "description": "Check that /fakeroot is not in /etc/fstab"
+        },
+        {
+          "type": "command",
+          "host": "servera",
+          "command": "grep -E '^UUID=.*\\s+/\\s+xfs' /etc/fstab",
+          "expected_exit_code": 0,
+          "description": "Check that root filesystem is mounted on /"
+        }
+      ],
+      "success_message": "/etc/fstab correctly configured with / mount point",
+      "failure_message": "/etc/fstab still contains incorrect mount point (/fakeroot)",
+      "hints": [
+        "Edit /etc/fstab and change /fakeroot to /",
+        "The line should look like: UUID=<uuid> / xfs defaults 0 0",
+        "After editing, run 'systemctl daemon-reload' and 'mount -a' to verify"
+      ]
+    },
+    {
+      "id": "root-mounted",
+      "name": "Verify root filesystem is mounted",
+      "description": "The root filesystem should be mounted at /",
+      "points": 2,
+      "fatal": true,
+      "checks": [
+        {
+          "type": "mount_exists",
+          "host": "servera",
+          "mountpoint": "/",
+          "fstype": "xfs"
+        }
+      ],
+      "success_message": "Root filesystem is correctly mounted",
+      "failure_message": "Root filesystem is not mounted correctly",
+      "hints": [
+        "Check mount status with 'mount | grep \" / \"'",
+        "The root filesystem should be mounted as xfs"
+      ]
+    },
+    {
+      "id": "fstab-syntax-valid",
+      "name": "Verify /etc/fstab has valid syntax",
+      "description": "The /etc/fstab file should be parseable without errors",
+      "points": 2,
+      "fatal": false,
+      "checks": [
+        {
+          "type": "command",
+          "host": "servera",
+          "command": "findmnt --verify --tab-file /etc/fstab 2>&1 | grep -v '^$' | grep -c 'error' || echo 0",
+          "expected_stdout": "^0$",
+          "description": "Check fstab syntax is valid"
+        }
+      ],
+      "success_message": "/etc/fstab syntax is valid",
+      "failure_message": "/etc/fstab contains syntax errors",
+      "hints": [
+        "Use 'findmnt --verify' to check /etc/fstab for errors",
+        "Each line should have: device mountpoint fstype options dump pass"
+      ]
+    },
+    {
+      "id": "system-bootable",
+      "name": "Verify system can complete boot process",
+      "description": "The system should be able to boot normally and reach multi-user target",
+      "points": 1,
+      "fatal": false,
+      "checks": [
+        {
+          "type": "command",
+          "host": "servera",
+          "command": "systemctl is-system-running",
+          "expected_stdout": "(running|degraded)",
+          "description": "Check system has completed boot"
+        }
+      ],
+      "success_message": "System is running normally",
+      "failure_message": "System did not complete boot process",
+      "hints": [
+        "If the system is stuck, use emergency.target to troubleshoot",
+        "Check /etc/fstab for any remaining errors"
+      ]
+    }
+  ]
+}

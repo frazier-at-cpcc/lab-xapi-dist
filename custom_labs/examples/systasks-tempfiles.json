@@ -1,0 +1,175 @@
+{
+  "version": "1.0",
+  "metadata": {
+    "slug": "systasks-tempfiles",
+    "name": "Manage Temporary Files",
+    "description": "Configure systemd-tmpfiles to remove unused temporary files and periodically purge files from directories",
+    "course": "rh134",
+    "chapter": "Chapter 4",
+    "estimated_time": "25 minutes",
+    "objectives": [
+      "Configure systemd-tmpfiles to remove unused temporary files from the /tmp directory",
+      "Configure systemd-tmpfiles to periodically purge files from another directory"
+    ],
+    "prerequisites": [
+      "Basic file system management",
+      "Understanding of systemd-tmpfiles"
+    ],
+    "tags": [
+      "systemd",
+      "tmpfiles",
+      "temporary-files",
+      "cleanup",
+      "automation"
+    ]
+  },
+  "environment": {
+    "hosts": [
+      {
+        "name": "servera",
+        "description": "Target server for tmpfiles configuration",
+        "ssh_user": "root"
+      }
+    ],
+    "variables": {}
+  },
+  "tasks": [
+    {
+      "id": "tmp-conf-exists",
+      "name": "Verify tmp.conf configuration file exists",
+      "description": "The tmp.conf file must be copied to /etc/tmpfiles.d for customization",
+      "points": 1,
+      "fatal": true,
+      "checks": [
+        {
+          "type": "file_exists",
+          "host": "servera",
+          "path": "/etc/tmpfiles.d/tmp.conf"
+        }
+      ],
+      "success_message": "The tmp.conf configuration file exists",
+      "failure_message": "The tmp.conf configuration file is missing",
+      "hints": [
+        "Copy the file: cp /usr/lib/tmpfiles.d/tmp.conf /etc/tmpfiles.d/tmp.conf"
+      ]
+    },
+    {
+      "id": "tmp-age-configured",
+      "name": "Verify /tmp cleanup is configured for 5 days",
+      "description": "The tmp.conf must configure /tmp cleanup for files unused for 5 days",
+      "points": 2,
+      "checks": [
+        {
+          "type": "file_contains",
+          "host": "servera",
+          "path": "/etc/tmpfiles.d/tmp.conf",
+          "pattern": "q\\s+/tmp\\s+1777\\s+root\\s+root\\s+5d"
+        }
+      ],
+      "success_message": "The /tmp directory is configured for 5-day cleanup",
+      "failure_message": "The /tmp directory cleanup age is not set to 5 days",
+      "hints": [
+        "Edit /etc/tmpfiles.d/tmp.conf",
+        "The file should contain: q /tmp 1777 root root 5d",
+        "Remove all other lines from the file"
+      ]
+    },
+    {
+      "id": "momentary-conf-exists",
+      "name": "Verify momentary.conf configuration file exists",
+      "description": "The momentary.conf file must exist for /run/momentary directory management",
+      "points": 1,
+      "fatal": true,
+      "checks": [
+        {
+          "type": "file_exists",
+          "host": "servera",
+          "path": "/etc/tmpfiles.d/momentary.conf"
+        }
+      ],
+      "success_message": "The momentary.conf configuration file exists",
+      "failure_message": "The momentary.conf configuration file is missing",
+      "hints": [
+        "Create /etc/tmpfiles.d/momentary.conf with the required configuration"
+      ]
+    },
+    {
+      "id": "momentary-conf-configured",
+      "name": "Verify momentary.conf is correctly configured",
+      "description": "The momentary.conf must configure /run/momentary with correct permissions and 30-second age",
+      "points": 2,
+      "checks": [
+        {
+          "type": "file_contains",
+          "host": "servera",
+          "path": "/etc/tmpfiles.d/momentary.conf",
+          "pattern": "d\\s+/run/momentary\\s+0700\\s+root\\s+root\\s+30s"
+        }
+      ],
+      "success_message": "The momentary.conf is correctly configured",
+      "failure_message": "The momentary.conf configuration is incorrect",
+      "hints": [
+        "The file should contain: d /run/momentary 0700 root root 30s",
+        "d = create directory, 0700 = permissions, root:root = owner:group, 30s = age"
+      ]
+    },
+    {
+      "id": "momentary-directory-exists",
+      "name": "Verify /run/momentary directory exists",
+      "description": "The /run/momentary directory must be created by systemd-tmpfiles",
+      "points": 1,
+      "checks": [
+        {
+          "type": "directory_exists",
+          "host": "servera",
+          "path": "/run/momentary"
+        }
+      ],
+      "success_message": "The /run/momentary directory exists",
+      "failure_message": "The /run/momentary directory does not exist",
+      "hints": [
+        "Create the directory: systemd-tmpfiles --create /etc/tmpfiles.d/momentary.conf"
+      ]
+    },
+    {
+      "id": "momentary-directory-permissions",
+      "name": "Verify /run/momentary has correct permissions",
+      "description": "The /run/momentary directory must have 0700 permissions",
+      "points": 1,
+      "checks": [
+        {
+          "type": "file_mode",
+          "host": "servera",
+          "path": "/run/momentary",
+          "mode": "0700"
+        }
+      ],
+      "success_message": "The /run/momentary directory has correct permissions",
+      "failure_message": "The /run/momentary directory permissions are incorrect",
+      "hints": [
+        "The directory should have 0700 permissions",
+        "Run: systemd-tmpfiles --create /etc/tmpfiles.d/momentary.conf"
+      ]
+    },
+    {
+      "id": "momentary-directory-ownership",
+      "name": "Verify /run/momentary ownership",
+      "description": "The /run/momentary directory must be owned by root:root",
+      "points": 1,
+      "checks": [
+        {
+          "type": "file_owner",
+          "host": "servera",
+          "path": "/run/momentary",
+          "owner": "root",
+          "group": "root"
+        }
+      ],
+      "success_message": "The /run/momentary directory has correct ownership",
+      "failure_message": "The /run/momentary directory ownership is incorrect",
+      "hints": [
+        "The directory should be owned by root:root"
+      ]
+    }
+  ]
+}

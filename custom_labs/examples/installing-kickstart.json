@@ -1,0 +1,300 @@
+{
+  "version": "1.0",
+  "metadata": {
+    "slug": "installing-kickstart",
+    "name": "Automate Red Hat Enterprise Linux Installation with Kickstart",
+    "description": "Install Red Hat Enterprise Linux automatically based on a predefined configuration by using Kickstart",
+    "course": "rh134",
+    "chapter": "Chapter 16",
+    "estimated_time": "30 minutes",
+    "objectives": [
+      "Create a valid Kickstart file",
+      "Make the file available by using the HTTP protocol",
+      "Install Red Hat Enterprise Linux 10 by using Kickstart"
+    ],
+    "prerequisites": [
+      "Access to servera and serverc machines",
+      "Apache HTTP server running on servera"
+    ],
+    "tags": ["kickstart", "installation", "automation", "anaconda", "pxe", "rhel10"]
+  },
+  "environment": {
+    "hosts": [
+      {
+        "name": "servera",
+        "description": "Server hosting the Kickstart file via HTTP",
+        "ssh_user": "student"
+      },
+      {
+        "name": "serverc",
+        "description": "Target machine for Kickstart installation",
+        "ssh_user": "student"
+      }
+    ],
+    "variables": {}
+  },
+  "tasks": [
+    {
+      "id": "pykickstart-installed",
+      "name": "Verify pykickstart package is installed on servera",
+      "description": "The pykickstart package should be installed for Kickstart validation",
+      "points": 1,
+      "fatal": false,
+      "checks": [
+        {
+          "type": "package_installed",
+          "host": "servera",
+          "package": "pykickstart"
+        }
+      ],
+      "success_message": "pykickstart package is installed",
+      "failure_message": "pykickstart package is not installed",
+      "hints": [
+        "Install with: sudo dnf install pykickstart",
+        "This package provides ksvalidator for syntax checking"
+      ]
+    },
+    {
+      "id": "kickstart-file-exists",
+      "name": "Verify Kickstart file exists in web root",
+      "description": "The kickstart.cfg file should be published in /var/www/html",
+      "points": 2,
+      "fatal": true,
+      "checks": [
+        {
+          "type": "file_exists",
+          "host": "servera",
+          "path": "/var/www/html/kickstart.cfg"
+        }
+      ],
+      "success_message": "Kickstart file exists at /var/www/html/kickstart.cfg",
+      "failure_message": "Kickstart file not found in /var/www/html/",
+      "hints": [
+        "Copy the file: sudo cp ~/RH304/labs/installing-kickstart/kickstart.cfg /var/www/html/",
+        "Ensure the Apache web server can serve this file"
+      ]
+    },
+    {
+      "id": "kickstart-text-mode",
+      "name": "Verify Kickstart uses text install mode",
+      "description": "The Kickstart file should specify text mode installation",
+      "points": 1,
+      "fatal": false,
+      "checks": [
+        {
+          "type": "file_contains",
+          "host": "servera",
+          "path": "/var/www/html/kickstart.cfg",
+          "pattern": "^text"
+        }
+      ],
+      "success_message": "Kickstart is configured for text mode installation",
+      "failure_message": "Kickstart is not set to text mode",
+      "hints": [
+        "Replace 'graphical' with 'text' in the Kickstart file",
+        "The text command should be on its own line"
+      ]
+    },
+    {
+      "id": "kickstart-guest-agents",
+      "name": "Verify guest-agents package group in Kickstart",
+      "description": "The Kickstart file should include the @guest-agents package group",
+      "points": 1,
+      "fatal": false,
+      "checks": [
+        {
+          "type": "file_contains",
+          "host": "servera",
+          "path": "/var/www/html/kickstart.cfg",
+          "pattern": "@guest-agents"
+        }
+      ],
+      "success_message": "guest-agents package group is included",
+      "failure_message": "guest-agents package group is missing",
+      "hints": [
+        "Add @guest-agents to the %packages section",
+        "Package groups are prefixed with @"
+      ]
+    },
+    {
+      "id": "kickstart-vim-enhanced",
+      "name": "Verify vim-enhanced package in Kickstart",
+      "description": "The Kickstart file should include the vim-enhanced package",
+      "points": 1,
+      "fatal": false,
+      "checks": [
+        {
+          "type": "file_contains",
+          "host": "servera",
+          "path": "/var/www/html/kickstart.cfg",
+          "pattern": "vim-enhanced"
+        }
+      ],
+      "success_message": "vim-enhanced package is included",
+      "failure_message": "vim-enhanced package is missing",
+      "hints": [
+        "Add vim-enhanced to the %packages section",
+        "Individual packages do not need the @ prefix"
+      ]
+    },
+    {
+      "id": "kickstart-firstboot-disable",
+      "name": "Verify firstboot is disabled in Kickstart",
+      "description": "The Kickstart file should disable the firstboot wizard",
+      "points": 1,
+      "fatal": false,
+      "checks": [
+        {
+          "type": "file_contains",
+          "host": "servera",
+          "path": "/var/www/html/kickstart.cfg",
+          "pattern": "firstboot\\s+--disable"
+        }
+      ],
+      "success_message": "firstboot is disabled",
+      "failure_message": "firstboot is not disabled",
+      "hints": [
+        "Add 'firstboot --disable' to the Kickstart file",
+        "This prevents the GNOME Initial Setup wizard"
+      ]
+    },
+    {
+      "id": "kickstart-post-script",
+      "name": "Verify post-installation script in Kickstart",
+      "description": "The Kickstart file should include a %post script with mandb and /etc/issue update",
+      "points": 2,
+      "fatal": false,
+      "checks": [
+        {
+          "type": "file_contains",
+          "host": "servera",
+          "path": "/var/www/html/kickstart.cfg",
+          "pattern": "%post"
+        },
+        {
+          "type": "file_contains",
+          "host": "servera",
+          "path": "/var/www/html/kickstart.cfg",
+          "pattern": "mandb"
+        },
+        {
+          "type": "file_contains",
+          "host": "servera",
+          "path": "/var/www/html/kickstart.cfg",
+          "pattern": "Kickstarted on"
+        }
+      ],
+      "success_message": "Post-installation script is configured correctly",
+      "failure_message": "Post-installation script is missing or incomplete",
+      "hints": [
+        "Add a %post section at the end of the Kickstart file",
+        "Include 'mandb' to update manual page index",
+        "Include 'echo \"Kickstarted on $(date +%F)\" >> /etc/issue'"
+      ]
+    },
+    {
+      "id": "serverc-student-exists",
+      "name": "Verify student user exists on serverc",
+      "description": "The student user should exist on the Kickstart-installed system",
+      "points": 2,
+      "fatal": false,
+      "checks": [
+        {
+          "type": "user_exists",
+          "host": "serverc",
+          "username": "student"
+        }
+      ],
+      "success_message": "Student user exists on serverc",
+      "failure_message": "Student user does not exist on serverc",
+      "hints": [
+        "The Kickstart file should include a 'user' directive",
+        "Check the user line in kickstart.cfg"
+      ]
+    },
+    {
+      "id": "serverc-dhcp-network",
+      "name": "Verify serverc uses DHCP for networking",
+      "description": "The serverc machine should use DHCP (auto) for network configuration",
+      "points": 1,
+      "fatal": false,
+      "checks": [
+        {
+          "type": "command",
+          "host": "serverc",
+          "command": "nmcli con show ens3 | grep -q 'ipv4.method:.*auto'",
+          "expected_exit_code": 0
+        }
+      ],
+      "success_message": "serverc is using DHCP for network configuration",
+      "failure_message": "serverc is not using DHCP",
+      "hints": [
+        "Without static network config in Kickstart, DHCP is used",
+        "Check with: nmcli con show ens3 | grep ipv4.method"
+      ]
+    },
+    {
+      "id": "serverc-lvm-storage",
+      "name": "Verify serverc uses LVM storage",
+      "description": "The serverc machine should use LVM volumes (from autopart)",
+      "points": 2,
+      "fatal": false,
+      "checks": [
+        {
+          "type": "command",
+          "host": "serverc",
+          "command": "lsblk | grep -q 'lvm'",
+          "expected_exit_code": 0
+        }
+      ],
+      "success_message": "serverc is using LVM storage",
+      "failure_message": "serverc is not using LVM storage",
+      "hints": [
+        "The autopart command in Kickstart creates LVM by default",
+        "Check with: lsblk"
+      ]
+    },
+    {
+      "id": "serverc-issue-kickstarted",
+      "name": "Verify /etc/issue contains Kickstart date",
+      "description": "The /etc/issue file should contain 'Kickstarted on' from the post script",
+      "points": 2,
+      "fatal": false,
+      "checks": [
+        {
+          "type": "file_contains",
+          "host": "serverc",
+          "path": "/etc/issue",
+          "pattern": "Kickstarted on"
+        }
+      ],
+      "success_message": "/etc/issue contains Kickstart installation date",
+      "failure_message": "/etc/issue does not contain Kickstart date",
+      "hints": [
+        "The %post script should append to /etc/issue",
+        "Check with: cat /etc/issue"
+      ]
+    },
+    {
+      "id": "serverc-mandb-updated",
+      "name": "Verify manual page database is updated",
+      "description": "The apropos command should find manual pages (mandb ran successfully)",
+      "points": 1,
+      "fatal": false,
+      "checks": [
+        {
+          "type": "command",
+          "host": "serverc",
+          "command": "apropos fstab 2>/dev/null | grep -q 'fstab'",
+          "expected_exit_code": 0
+        }
+      ],
+      "success_message": "Manual page database is updated",
+      "failure_message": "Manual page database may not be updated",
+      "hints": [
+        "The %post script should run 'mandb'",
+        "Test with: apropos fstab"
+      ]
+    }
+  ]
+}

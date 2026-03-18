@@ -1,0 +1,133 @@
+{
+  "version": "1.0",
+  "metadata": {
+    "slug": "systasks-timers",
+    "name": "Manage Repeating Jobs by Using Systemd Timer Units",
+    "description": "Schedule and inspect recurring system tasks that are scheduled as systemd timer units",
+    "course": "rh134",
+    "chapter": "Chapter 4",
+    "estimated_time": "20 minutes",
+    "objectives": [
+      "Update the systemd timer unit that gathers system activity data"
+    ],
+    "prerequisites": [
+      "Basic systemd service management",
+      "Understanding of system timers and scheduling"
+    ],
+    "tags": [
+      "systemd",
+      "timer",
+      "sysstat",
+      "scheduling",
+      "automation"
+    ]
+  },
+  "environment": {
+    "hosts": [
+      {
+        "name": "servera",
+        "description": "Target server for timer configuration",
+        "ssh_user": "root"
+      }
+    ],
+    "variables": {}
+  },
+  "tasks": [
+    {
+      "id": "sysstat-installed",
+      "name": "Verify sysstat package is installed",
+      "description": "The sysstat package must be installed to provide system activity data collection",
+      "points": 1,
+      "fatal": true,
+      "checks": [
+        {
+          "type": "package_installed",
+          "host": "servera",
+          "package": "sysstat"
+        }
+      ],
+      "success_message": "The sysstat package is installed",
+      "failure_message": "The sysstat package is not installed",
+      "hints": [
+        "Install the sysstat package: sudo dnf install sysstat"
+      ]
+    },
+    {
+      "id": "timer-config-exists",
+      "name": "Verify custom timer configuration file exists",
+      "description": "The sysstat-collect.timer file must be copied to /etc/systemd/system for customization",
+      "points": 1,
+      "fatal": true,
+      "checks": [
+        {
+          "type": "file_exists",
+          "host": "servera",
+          "path": "/etc/systemd/system/sysstat-collect.timer"
+        }
+      ],
+      "success_message": "The custom timer configuration file exists",
+      "failure_message": "The custom timer configuration file is missing",
+      "hints": [
+        "Copy the timer file: cp /usr/lib/systemd/system/sysstat-collect.timer /etc/systemd/system/"
+      ]
+    },
+    {
+      "id": "timer-interval-configured",
+      "name": "Verify timer is configured for 2-minute interval",
+      "description": "The OnCalendar directive must be set to collect data every 2 minutes",
+      "points": 2,
+      "checks": [
+        {
+          "type": "file_contains",
+          "host": "servera",
+          "path": "/etc/systemd/system/sysstat-collect.timer",
+          "pattern": "OnCalendar=\\*:00/2"
+        }
+      ],
+      "success_message": "Timer is correctly configured for 2-minute intervals",
+      "failure_message": "Timer is not configured for 2-minute intervals",
+      "hints": [
+        "Edit /etc/systemd/system/sysstat-collect.timer",
+        "Change OnCalendar=*:00/10 to OnCalendar=*:00/2",
+        "Run systemctl daemon-reload after editing"
+      ]
+    },
+    {
+      "id": "timer-enabled",
+      "name": "Verify sysstat-collect.timer is enabled",
+      "description": "The timer unit must be enabled to start at boot",
+      "points": 2,
+      "checks": [
+        {
+          "type": "service_enabled",
+          "host": "servera",
+          "service": "sysstat-collect.timer"
+        }
+      ],
+      "success_message": "The sysstat-collect.timer is enabled",
+      "failure_message": "The sysstat-collect.timer is not enabled",
+      "hints": [
+        "Enable the timer: sudo systemctl enable sysstat-collect.timer"
+      ]
+    },
+    {
+      "id": "timer-running",
+      "name": "Verify sysstat-collect.timer is active",
+      "description": "The timer unit must be running to schedule data collection",
+      "points": 2,
+      "checks": [
+        {
+          "type": "service_running",
+          "host": "servera",
+          "service": "sysstat-collect.timer"
+        }
+      ],
+      "success_message": "The sysstat-collect.timer is active",
+      "failure_message": "The sysstat-collect.timer is not active",
+      "hints": [
+        "Start the timer: sudo systemctl start sysstat-collect.timer",
+        "Or enable and start: sudo systemctl enable --now sysstat-collect.timer"
+      ]
+    }
+  ]
+}

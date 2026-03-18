@@ -1,0 +1,190 @@
+{
+  "version": "1.0",
+  "metadata": {
+    "slug": "image-bootable",
+    "name": "Create Installable Images for Image Mode",
+    "description": "Build a bootable container image and push it to a container registry for use with image mode for Red Hat Enterprise Linux",
+    "course": "rh134",
+    "chapter": "Chapter 18",
+    "estimated_time": "30 minutes",
+    "objectives": [
+      "Build a bootable container image and push it to a container registry"
+    ],
+    "prerequisites": [
+      "Basic understanding of containers and Podman",
+      "Familiarity with Containerfile syntax"
+    ],
+    "tags": ["image-mode", "bootc", "container", "podman", "registry", "rhel10"]
+  },
+  "environment": {
+    "hosts": [
+      {
+        "name": "workstation",
+        "description": "Container build workstation",
+        "ssh_user": "student"
+      }
+    ],
+    "variables": {
+      "REGISTRY": "registry.lab.example.com:5000",
+      "IMAGE_NAME": "student/webserver-bootc"
+    }
+  },
+  "tasks": [
+    {
+      "id": "containerfile-from-directive",
+      "name": "Verify Containerfile uses rhel-bootc base image",
+      "description": "The Containerfile should use the rhel-bootc image as the base image",
+      "points": 2,
+      "fatal": true,
+      "checks": [
+        {
+          "type": "file_exists",
+          "host": "workstation",
+          "path": "/home/student/RH304/labs/image-bootable/Containerfile"
+        },
+        {
+          "type": "file_contains",
+          "host": "workstation",
+          "path": "/home/student/RH304/labs/image-bootable/Containerfile",
+          "pattern": "FROM\\s+registry\\.lab\\.example\\.com:5000/rhel10/rhel-bootc"
+        }
+      ],
+      "success_message": "Containerfile correctly uses rhel-bootc base image",
+      "failure_message": "Containerfile does not use the correct base image",
+      "hints": [
+        "The FROM directive should reference registry.lab.example.com:5000/rhel10/rhel-bootc",
+        "Check the first line of the Containerfile after any comments"
+      ]
+    },
+    {
+      "id": "containerfile-add-etc",
+      "name": "Verify Containerfile adds etc directory",
+      "description": "The Containerfile should add the local etc directory to the container",
+      "points": 1,
+      "checks": [
+        {
+          "type": "file_contains",
+          "host": "workstation",
+          "path": "/home/student/RH304/labs/image-bootable/Containerfile",
+          "pattern": "ADD\\s+etc\\s+/etc"
+        }
+      ],
+      "success_message": "Containerfile correctly adds etc directory",
+      "failure_message": "Containerfile does not add the etc directory",
+      "hints": [
+        "Use: ADD etc /etc",
+        "This copies configuration files needed for services"
+      ]
+    },
+    {
+      "id": "containerfile-httpd-install",
+      "name": "Verify Containerfile installs and enables httpd",
+      "description": "The Containerfile should install the httpd package and enable the service",
+      "points": 2,
+      "checks": [
+        {
+          "type": "file_contains",
+          "host": "workstation",
+          "path": "/home/student/RH304/labs/image-bootable/Containerfile",
+          "pattern": "dnf\\s+install\\s+-y\\s+httpd"
+        },
+        {
+          "type": "file_contains",
+          "host": "workstation",
+          "path": "/home/student/RH304/labs/image-bootable/Containerfile",
+          "pattern": "systemctl\\s+enable\\s+httpd"
+        }
+      ],
+      "success_message": "Containerfile correctly installs and enables httpd",
+      "failure_message": "Containerfile does not properly install or enable httpd",
+      "hints": [
+        "Use: RUN dnf install -y httpd && systemctl enable httpd",
+        "Both installation and enabling should be in a single RUN command"
+      ]
+    },
+    {
+      "id": "containerfile-copy-indexhtml",
+      "name": "Verify Containerfile copies index.html",
+      "description": "The Containerfile should copy index.html to /var/www/html/",
+      "points": 1,
+      "checks": [
+        {
+          "type": "file_contains",
+          "host": "workstation",
+          "path": "/home/student/RH304/labs/image-bootable/Containerfile",
+          "pattern": "COPY\\s+index\\.html\\s+/var/www/html/"
+        }
+      ],
+      "success_message": "Containerfile correctly copies index.html",
+      "failure_message": "Containerfile does not copy index.html to the web server directory",
+      "hints": [
+        "Use: COPY index.html /var/www/html/",
+        "The index.html file should exist in the same directory as the Containerfile"
+      ]
+    },
+    {
+      "id": "container-image-built",
+      "name": "Verify container image was built locally",
+      "description": "The webserver-bootc container image should exist locally",
+      "points": 2,
+      "checks": [
+        {
+          "type": "command",
+          "host": "workstation",
+          "command": "podman images --format '{{.Repository}}:{{.Tag}}' | grep -q 'registry.lab.example.com:5000/student/webserver-bootc'",
+          "expected_exit_code": 0
+        }
+      ],
+      "success_message": "Container image built successfully",
+      "failure_message": "Container image not found locally",
+      "hints": [
+        "Build with: podman build --squash -t registry.lab.example.com:5000/student/webserver-bootc .",
+        "Run the command from the ~/RH304/labs/image-bootable directory"
+      ]
+    },
+    {
+      "id": "container-test-running",
+      "name": "Verify web server responds on port 8080",
+      "description": "A test container should be running and serving content on port 8080",
+      "points": 2,
+      "checks": [
+        {
+          "type": "command",
+          "host": "workstation",
+          "command": "curl -s localhost:8080 | grep -q 'Hello image mode for RHEL!'",
+          "expected_exit_code": 0,
+          "timeout": 10
+        }
+      ],
+      "success_message": "Web server responding correctly on port 8080",
+      "failure_message": "Web server not responding or incorrect content",
+      "hints": [
+        "Start container: podman run -p 8080:80 -d registry.lab.example.com:5000/student/webserver-bootc",
+        "Check running containers: podman ps",
+        "Verify content: curl localhost:8080"
+      ]
+    },
+    {
+      "id": "image-pushed-to-registry",
+      "name": "Verify image pushed to registry",
+      "description": "The container image should be available in the registry",
+      "points": 3,
+      "checks": [
+        {
+          "type": "command",
+          "host": "workstation",
+          "command": "podman search registry.lab.example.com:5000/ 2>/dev/null | grep -q 'student/webserver-bootc'",
+          "expected_exit_code": 0,
+          "timeout": 30
+        }
+      ],
+      "success_message": "Container image successfully pushed to registry",
+      "failure_message": "Container image not found in registry",
+      "hints": [
+        "Login first: podman login registry.lab.example.com:5000",
+        "Push image: podman push registry.lab.example.com:5000/student/webserver-bootc",
+        "Verify: podman search registry.lab.example.com:5000/"
+      ]
+    }
+  ]
+}
